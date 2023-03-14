@@ -1,0 +1,82 @@
+name: Docker and Kubernetes Deploy Production
+on:
+  push:
+    branches:
+      - test
+jobs:
+  build:
+    name: Change K8s Controller
+    runs-on: ubuntu-latest
+    env:
+      image_name: 'ave-master-api'
+      env_name: 'develop'
+      REGISTRY_DO: ${{ secrets.DOCKER_REGISTRY_DO }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: git config --global user.name "AVE CI"
+      - run: git config --global user.email "developer@albatrosservices.com"
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - id: set_var
+        run: |
+          content=`cat package.json`
+          # the following lines are only required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of optional handling for multi line json
+          echo "::set-output name=packageJson::$content"
+      - run: |
+          echo "${{fromJson(steps.set_var.outputs.packageJson).version}}"
+      - name: build image
+        uses: docker/build-push-action@v2
+        with:
+          push: false
+          load: true
+          context: .
+          repository: ${{ secrets.DOCKER_REGISTRY_DO }}/${{ env.image_name }}
+          tags: ${{ secrets.DOCKER_REGISTRY_DO }}/${{ env.image_name }}:${{ env.env_name }}_v${{fromJson(steps.set_var.outputs.packageJson).version}}, ${{ secrets.DOCKER_REGISTRY_DO }}/${{ env.image_name }}:${{ github.sha }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 800
+
+      - name: push Image
+        run: docker push ${{ secrets.DOCKER_REGISTRY_DO }}/${{ env.image_name }} --all-tags
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v1
+        with:
+          kustomize-version: "3.6.1"
+      - name: Clone repo
+        env:
+          DEV_OPS_ADMIN_TOKEN: ${{ secrets.DEV_OPS_ADMIN_TOKEN }}
+          IMAGE_NAME: ${{ env.image_name }}
+          ENV_NAME: ${{ env.env_name }}
+        run: |
+          git clone https://AlbatrosDeveloper:$DEV_OPS_ADMIN_TOKEN@github.com/AlbatrosDeveloper/k8-argoCD-kustomize # This works
+          cd k8-argoCD-kustomize/running/manifests/ave-projects/$IMAGE_NAME/overlays/$ENV_NAME
+          git config user.name "AVE CI"
+          git config user.email "developer@albatrosservices.com"
+
+          git checkout master
+
+          kustomize edit set image $IMAGE_NAME=$REGISTRY_DO/$image_name:$GITHUB_SHA
+
+          git commit -am "Bump image tag - $IMAGE_NAME - $ENV_NAME -"
+
+          git push origin master

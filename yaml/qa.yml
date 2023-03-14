@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ave-g-user-api-qa
+  namespace: qa
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 19993
+  selector:
+    app: ave-g-user-api-qa
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ave-g-user-api-qa
+  namespace: qa
+  labels:
+    app: ave-g-user-api-qa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ave-g-user-api-qa
+  template:
+    metadata:
+      labels:
+        app: ave-g-user-api-qa
+    spec:
+      containers:
+      - name: ave-g-user-api-qa
+        image: registry.digitalocean.com/asap-registry/ave-g-user-api:qa
+        ports:
+          - containerPort: 19993
+            name: http
+        volumeMounts:
+          - name: configs-qa-ni
+            mountPath: /usr/src/asap/config
+        imagePullPolicy: Always
+        env:
+          - name: NODE_ENV
+            value: QA
+        # envFrom:
+        # - configMapRef:
+        #     name: configsprod
+      volumes:
+        - name: configs-qa-ni
+          configMap:
+            name: configs-qa-ni
+            items:
+              - key: default.json
+                path: default.json
+              - key: QA.json
+                path: QA.json
+      imagePullSecrets:
+        - name: asap-registry

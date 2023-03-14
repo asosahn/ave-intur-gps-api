@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ave-g-user-api
+  namespace: sandbox
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 19993
+  selector:
+    app: ave-g-user-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ave-g-user-api
+  namespace: sandbox
+  labels:
+    app: ave-g-user-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ave-g-user-api
+  template:
+    metadata:
+      labels:
+        app: ave-g-user-api
+    spec:
+      containers:
+      - name: ave-g-user-api
+        image: registry.digitalocean.com/asap-registry/ave-g-user-api:sandbox
+        ports:
+          - containerPort: 19993
+            name: http
+        imagePullPolicy: Always
+        env:
+          - name: NODE_ENV
+            value: PROD
+        volumeMounts:
+          - name: configproduction
+            mountPath: /usr/src/asap/config
+          - name: jwtrs256-pub-volume-config
+            mountPath: /usr/src/asap/jwtRS256.key.pub
+            subPath: jwtRS256.key.pub
+          - name: jwtrs256-pub-customer-volume-config
+            mountPath: /usr/src/asap/jwtRS256.customer.key.pub
+            subPath: jwtRS256.customer.key.pub
+      volumes:
+        - name: configproduction
+          configMap:
+            name: configproduction
+            items:
+              - key: default.json
+                path: default.json
+              - key: PROD.json
+                path: PROD.json
+        - name: jwtrs256-pub-volume-config
+          configMap:
+            name: configskeysrsa
+            items:
+              - key: jwtRS256.key.pub
+                path: jwtRS256.key.pub
+        - name: jwtrs256-pub-customer-volume-config
+          configMap:
+            name: configskeysrsa
+            items:
+              - key: jwtRS256.customer.key.pub
+                path: jwtRS256.customer.key.pub
+      imagePullSecrets:
+        - name: asap-registry

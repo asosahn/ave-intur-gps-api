@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ave-g-user-api
+  namespace: test
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 19993
+  selector:
+    app: ave-g-user-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ave-g-user-api
+  namespace: test
+  labels:
+    app: ave-g-user-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ave-g-user-api
+  template:
+    metadata:
+      labels:
+        app: ave-g-user-api
+    spec:
+      containers:
+      - name: ave-g-user-api
+        image: registry.digitalocean.com/asap-registry/ave-g-user-api:test
+        ports:
+          - containerPort: 19993
+            name: http
+        volumeMounts:
+        - name: configsstable
+          mountPath: /usr/src/asap/config
+        imagePullPolicy: Always
+        env:
+          - name: NODE_ENV
+            value: DEV
+      volumes:
+      - name: configsstable
+        configMap:
+          name: configsstable
+          items:
+            - key: default.json
+              path: default.json
+            - key: STABLE.json
+              path: STABLE.json
+            - key: DEV.json
+              path: DEV.json
+            - key: QA.json
+              path: QA.json
+            - key: SANDBOX.json
+              path: SANDBOX.json
+      imagePullSecrets:
+        - name: asap-registry

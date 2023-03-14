@@ -1,0 +1,6 @@
+{
+  "MONGO_DATABASE": "mongodb+srv://ave-admin:kWRgfFPS44JaDQvG@develop-g.ot8c5lf.mongodb.net/gurus?retryWrites=true&w=majority",
+  "API_MASTER_SWAGGER": "http://localhost:3012",
+  "API_CLIENT_URL": "http://localhost:3014",
+  "API_LOCATION_URL": "http://localhost:3010"
+}
