@@ -5,6 +5,11 @@ import { ConfigModule } from '@nestjs/config';
 import { PingModule } from './modules/ping/ping.module';
 import configuration from './config/configuration';
 import { MongooseModule } from '@nestjs/mongoose';
+import { OrderLogModule } from './modules/order-log/order-log.module';
+import { OrderDetaillTemporalModule } from './modules/order-detaill-temporal/order-detaill-temporal.module';
+import { OrderDetaillModule } from './modules/order-detaill/order-detaill.module';
+import { OrderPayModule } from './modules/order-pay/order-pay.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -18,6 +23,11 @@ import { MongooseModule } from '@nestjs/mongoose';
       }),
     }),
     PingModule,
+    OrderLogModule,
+    OrderDetaillTemporalModule,
+    OrderDetaillModule,
+    OrderPayModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

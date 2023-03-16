@@ -1,9 +1,9 @@
 {
-  "name": "ave-master-api",
+  "name": "ave-g-delivery-api",
   "version": "1.0.0",
-  "description": "AVE Master API",
+  "description": "AVE G DELIVERY API",
   "author": "",
-  "port": 3012,
+  "port": 3020,
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -22,8 +22,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@albatrosdeveloper/ave-models-npm": "^1.0.36",
+    "@albatrosdeveloper/ave-models-npm": "^1.0.48",
     "@albatrosdeveloper/ave-utils-npm": "^1.0.7",
+    "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",

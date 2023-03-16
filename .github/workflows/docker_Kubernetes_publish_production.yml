@@ -8,13 +8,13 @@ jobs:
     name: Change K8s Controller
     runs-on: ubuntu-latest
     env:
-      image_name: 'ave-master-api'
+      image_name: 'ave-warehouse-api'
       env_name: 'develop'
       REGISTRY_DO: ${{ secrets.DOCKER_REGISTRY_DO }}
 
     steps:
       - uses: actions/checkout@v2
-      - run: git config --global user.name "AVE CI"
+      - run: git config --global user.name "ASAP CI"
       - run: git config --global user.email "developer@albatrosservices.com"
       -
         name: Set up QEMU

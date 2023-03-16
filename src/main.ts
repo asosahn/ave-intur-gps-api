@@ -12,7 +12,11 @@ async function bootstrap() {
     cors: true,
   });
   const configService = app.get<ConfigService>(ConfigService);
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
   app.setGlobalPrefix('api');
   app.use(
     morgan('dev', {
@@ -23,7 +27,7 @@ async function bootstrap() {
   const port = configService.get('port');
   const config = new DocumentBuilder()
     .addBearerAuth()
-    .addServer(configService.get('API_MASTER_SWAGGER'))
+    .addServer(configService.get('API_DELIVERY_SWAGGER'))
     .setTitle(configService.get('name'))
     .setDescription(configService.get('description'))
     .setVersion(configService.get('version'))
@@ -35,7 +39,7 @@ async function bootstrap() {
   console.log(`listen application on port => ${port}`);
   console.log(`connected on mongoDB => ${configService.get('MONGO_DATABASE')}`);
   console.log(
-    `API_MASTER_SWAGGER => ${configService.get('API_MASTER_SWAGGER')}`,
+    `API_DELIVERY_SWAGGER => ${configService.get('API_DELIVERY_SWAGGER')}`,
   );
   console.log(`ROUTE => ${configService.get('ROUTE')}`);
   console.log(`Sever ready => ${process.env.NODE_ENV}`);
