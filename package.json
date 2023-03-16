@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "AVE G DELIVERY API",
   "author": "",
-  "port": 3020,
+  "port": 3017,
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -22,7 +22,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@albatrosdeveloper/ave-models-npm": "^1.0.48",
+    "@albatrosdeveloper/ave-models-npm": "^1.0.49",
     "@albatrosdeveloper/ave-utils-npm": "^1.0.7",
     "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.0.0",
