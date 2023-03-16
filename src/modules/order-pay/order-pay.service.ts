@@ -2,19 +2,16 @@ import OrderPayAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/or
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateOrderPayDto } from './dto/create-order-pay.dto';
 import { isEmpty } from 'lodash';
-import TypeAccountAtributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeAccount/typeAccount.entity';
-import {
-  TypeAccountErrorCodes,
-  TypeAccountErrors,
-} from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeAccount/typeAccount.errors';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
+import TypeCardAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeCard/typeCard.entity';
+import { TypeCardErrors, TypeCardErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeCard/typeCard.errors';
 
 @Injectable()
 export class OrderPayService {
   private readonly logger = new Logger(OrderPayService.name);
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
   async httpServiceGet<T>(
     api: string,
@@ -40,21 +37,24 @@ export class OrderPayService {
     createOrderPayDto: CreateOrderPayDto,
   ): Promise<OrderPayAttributes> {
     try {
-      const typeAccountExist = await this.httpServiceGet<TypeAccountAtributes>(
-        `${process.env.API_MASTER_URL}/type-account/byId/${createOrderPayDto.typeAccountId}`,
+      const typeCard = await this.httpServiceGet<TypeCardAttributes>(
+        `${process.env.API_MASTER_URL}/type-card/byId/${createOrderPayDto.typeCardId}`,
         undefined,
         {
-          message: TypeAccountErrors.TYPE_ACCOUNT_NOT_FOUND,
-          errorCode: TypeAccountErrorCodes.TYPE_ACCOUNT_NOT_FOUND,
+          message: TypeCardErrors.TYPE_CARD_NOT_FOUND,
+          errorCode: TypeCardErrorCodes.TYPE_CARD_NOT_FOUND,
         },
       );
-      if (!typeAccountExist) {
-        throw {
-          message: TypeAccountErrors.TYPE_ACCOUNT_NOT_FOUND,
-          errorCode: TypeAccountErrorCodes.TYPE_ACCOUNT_NOT_FOUND,
-        };
-      }
+
       const orderPayCreate = new OrderPayAttributes();
+      orderPayCreate.methodPayment = createOrderPayDto.methodPayment
+      orderPayCreate.accountPayment = createOrderPayDto.accountPayment
+      orderPayCreate.operationNumber = createOrderPayDto.operationNumber
+      orderPayCreate.document = createOrderPayDto.document
+      orderPayCreate.commentError = createOrderPayDto.commentError
+      orderPayCreate.typeCard = typeCard
+      orderPayCreate.active = createOrderPayDto.active
+
       return orderPayCreate;
     } catch (err) {
       throw new HttpException(

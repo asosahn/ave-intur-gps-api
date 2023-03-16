@@ -2,14 +2,13 @@ import OrderDetaillAttributes from '@albatrosdeveloper/ave-models-npm/lib/schema
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateOrderDetaillDto } from './dto/create-order-detaill.dto';
 import { isEmpty } from 'lodash';
-import TypeAccountAtributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeAccount/typeAccount.entity';
-import {
-  TypeAccountErrorCodes,
-  TypeAccountErrors,
-} from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeAccount/typeAccount.errors';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
+import ItemAttributes, { AttributeItemAttributes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.entity';
+import { ItemErrors, ItemErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.errors';
+import AttributeAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/attribute/attribute.entity';
+import { AttributeErrors, AttributeErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/attribute/attribute.errors';
 
 @Injectable()
 export class OrderDetaillService {
@@ -40,21 +39,36 @@ export class OrderDetaillService {
     createOrderDetaillDto: CreateOrderDetaillDto,
   ): Promise<OrderDetaillAttributes> {
     try {
-      const typeAccountExist = await this.httpServiceGet<TypeAccountAtributes>(
-        `${process.env.API_MASTER_URL}/type-account/byId/${createOrderDetaillDto.typeAccountId}`,
+      const item = await this.httpServiceGet<ItemAttributes>(
+        `${process.env.API_ITEM_URL}/item/byId/${createOrderDetaillDto.itemId}`,
         undefined,
         {
-          message: TypeAccountErrors.TYPE_ACCOUNT_NOT_FOUND,
-          errorCode: TypeAccountErrorCodes.TYPE_ACCOUNT_NOT_FOUND,
+          message: ItemErrors.ITEM_NOT_FOUND,
+          errorCode: ItemErrorCodes.ITEM_NOT_FOUND,
         },
       );
-      if (!typeAccountExist) {
-        throw {
-          message: TypeAccountErrors.TYPE_ACCOUNT_NOT_FOUND,
-          errorCode: TypeAccountErrorCodes.TYPE_ACCOUNT_NOT_FOUND,
-        };
-      }
+
+      const attribute = await this.httpServiceGet<AttributeAttributes>(
+        `${process.env.API_MASTER_URL}/attribute/byId/${createOrderDetaillDto.attributeItem.atributeId}`,
+        undefined,
+        {
+          message: AttributeErrors.ATTRIBUTE_NOT_FOUND,
+          errorCode: AttributeErrorCodes.ATTRIBUTE_NOT_FOUND,
+        },
+      );
+
+      const attributeItem = new AttributeItemAttributes()
+      attributeItem.attribute = attribute
+      attributeItem.value = createOrderDetaillDto.attributeItem.value
+
       const orderDetaillCreate = new OrderDetaillAttributes();
+      orderDetaillCreate.item = item
+      orderDetaillCreate.attributeItem = attributeItem
+      orderDetaillCreate.quantity = createOrderDetaillDto.quantity
+      orderDetaillCreate.price = createOrderDetaillDto.price
+      orderDetaillCreate.quantisubtotalty = createOrderDetaillDto.quantisubtotalty
+      orderDetaillCreate.note = createOrderDetaillDto.note
+
       return orderDetaillCreate;
     } catch (err) {
       throw new HttpException(

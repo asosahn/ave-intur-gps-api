@@ -7,7 +7,7 @@ import {
   OrderErrors,
   OrderErrorCodes,
 } from '@albatrosdeveloper/ave-models-npm/lib/schemas/order/order.errors';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -23,13 +23,53 @@ import {
   where,
 } from '@albatrosdeveloper/ave-utils-npm/lib/utils/query.util';
 import { DocumentWithCountInterface } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/interfaces/interfaces';
+import { catchError, firstValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
+import OrderTypeAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderType/orderType.entity';
+import { OrderTypeErrors, OrderTypeErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderType/orderType.errors';
+import BusinessPartnerAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.entity';
+import { BusinessPartnerErrors, BusinessPartnerErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.errors';
+import WarehouseAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.entity';
+import { WarehouseErrors, WarehouseErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.errors';
+import { OrderDetaillTemporalService } from '../order-detaill-temporal/order-detaill-temporal.service';
+import { OrderDetaillService } from '../order-detaill/order-detaill.service';
+import { OrderPayService } from '../order-pay/order-pay.service';
+import { OrderLogService } from '../order-log/order-log.service';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
   constructor(
     @InjectModel(Order.name)
     private readonly orderModel: OrderModelExt<OrderDocument>,
-  ) {}
+    private readonly httpService: HttpService,
+    private orderDetaillTemporalService: OrderDetaillTemporalService,
+    private orderDetailService: OrderDetaillService,
+    private orderPayService: OrderPayService,
+    private orderLogService: OrderLogService
+  ) { }
+
+  async httpServiceGet<T>(
+    api: string,
+    filter: any,
+    errorType: object,
+  ): Promise<T> {
+    const { data } = await firstValueFrom(
+      this.httpService
+        .get<T>(api, {
+          params: filter,
+        })
+        .pipe(
+          catchError((error: AxiosError) => {
+            this.logger.error(error.response.data);
+            throw errorType;
+          }),
+        ),
+    );
+    return data;
+  }
+
   async create(createOrderDto: CreateOrderDto): Promise<OrderAttributes> {
     try {
       const orderExist = await this.findAll(
@@ -41,7 +81,80 @@ export class OrderService {
           errorCode: OrderErrorCodes.ORDER_CODE_ALREADY_EXISTS,
         };
       }
-      const orderNew = await this.orderModel.createGenId(createOrderDto);
+
+      const ordertype = await this.httpServiceGet<OrderTypeAttributes>(
+        `${process.env.API_MASTER_URL}/order-type/byId/${createOrderDto.orderTypeId}`,
+        undefined,
+        {
+          message: OrderTypeErrors.ORDER_TYPE_NOT_FOUND,
+          errorCode: OrderTypeErrorCodes.ORDER_TYPE_NOT_FOUND,
+        },
+      );
+
+      const businessPartner = await this.httpServiceGet<BusinessPartnerAttributes>(
+        `${process.env.API_CLIENT_URL}/business-partner/byId/${createOrderDto.businessPartnerId}`,
+        undefined,
+        {
+          message: BusinessPartnerErrors.BUSINESS_PARTNER_NOT_FOUND,
+          errorCode: BusinessPartnerErrorCodes.BUSINESS_PARTNER_NOT_FOUND,
+        },
+      );
+      const warehouse = await this.httpServiceGet<WarehouseAttributes>(
+        `${process.env.API_WAREHOUSE_URL}/warehouse/byId/${createOrderDto.warehouseId}`,
+        undefined,
+        {
+          message: WarehouseErrors.WAREHOUSE_NOT_FOUND,
+          errorCode: WarehouseErrorCodes.WAREHOUSE_NOT_FOUND,
+        },
+      );
+      const orderDetaillTemporals = []
+      for (let orderDetaillTemporal of createOrderDto.orderDetaillTemporals) {
+        const orderDetaillTemporalExist = await this.orderDetaillTemporalService.create(orderDetaillTemporal)
+        orderDetaillTemporals.push(orderDetaillTemporalExist)
+      }
+
+      const orderDetaills = []
+      for (let orderDetail of createOrderDto.orderDetaills) {
+        const orderDetailExist = await this.orderDetailService.create(orderDetail)
+        orderDetaills.push(orderDetailExist)
+      }
+
+      const orderPays = []
+      for (let orderPay of createOrderDto.orderPays) {
+        const orderPayExist = await this.orderPayService.create(orderPay)
+        orderPays.push(orderPayExist)
+      }
+
+      const orderLogs = []
+      for (let orderLog of createOrderDto.orderLogs) {
+        const orderLogExist = await this.orderLogService.create(orderLog)
+        orderLogs.push(orderLogExist)
+      }
+
+      const newOrder = new this.orderModel({
+        code: createOrderDto.code,
+        user: createOrderDto.user,
+        userAddress: createOrderDto.userAddress,
+        total: createOrderDto.total,
+        tax: createOrderDto.tax,
+        discount: createOrderDto.discount,
+        deliveryPrice: createOrderDto.deliveryPrice,
+        status: createOrderDto.status,
+        orderType: ordertype,
+        flagRTN: createOrderDto.flagRTN,
+        RTN: createOrderDto.RTN,
+        deliveryDate: createOrderDto.deliveryDate,
+        originType: createOrderDto.originType,
+        newTotal: createOrderDto.newTotal,
+        businessPartner: businessPartner,
+        warehouse: warehouse,
+        orderDetaillTemporals: orderDetaillTemporals,
+        orderDetaills: orderDetaills,
+        orderPays: orderPays,
+        orderLogs: orderLogs
+      })
+
+      const orderNew = await this.orderModel.createGenId(newOrder);
       return orderNew;
     } catch (err) {
       throw new HttpException(
@@ -146,10 +259,10 @@ export class OrderService {
       /**
        * Update order
        */
-      orderExist.name = updateOrderDto.name;
+      // orderExist.name = updateOrderDto.name;
       if (updateOrderDto.active) orderExist.active = updateOrderDto.active;
       const orderUpdated = await this.orderModel
-        .findByIdAndUpdate({ _id: id }, { $set: orderExist }, { new: true })
+        .findByIdAndUpdate({ _id: id }, { $set: updateOrderDto }, { new: true })
         .lean()
         .exec();
       return orderUpdated;
