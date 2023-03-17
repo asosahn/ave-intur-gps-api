@@ -36,6 +36,8 @@ import { OrderDetaillTemporalService } from '../order-detaill-temporal/order-det
 import { OrderDetaillService } from '../order-detaill/order-detaill.service';
 import { OrderPayService } from '../order-pay/order-pay.service';
 import { OrderLogService } from '../order-log/order-log.service';
+import UserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.entity';
+import { UserErrors, UserErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.errors';
 
 @Injectable()
 export class OrderService {
@@ -82,6 +84,16 @@ export class OrderService {
         };
       }
 
+      const user = await this.httpServiceGet<UserAttributes>(
+        `${process.env.API_CLIENT_URL}/user/byId/${createOrderDto.userId}`,
+        undefined,
+        {
+          message: UserErrors.USER_NOT_FOUND,
+          errorCode: UserErrorCodes.USER_NOT_FOUND,
+        },
+      );
+      console.log(user, 'USER')
+
       const ordertype = await this.httpServiceGet<OrderTypeAttributes>(
         `${process.env.API_MASTER_URL}/order-type/byId/${createOrderDto.orderTypeId}`,
         undefined,
@@ -90,6 +102,7 @@ export class OrderService {
           errorCode: OrderTypeErrorCodes.ORDER_TYPE_NOT_FOUND,
         },
       );
+      console.log(ordertype, 'ORDER TYPE')
 
       const businessPartner = await this.httpServiceGet<BusinessPartnerAttributes>(
         `${process.env.API_CLIENT_URL}/business-partner/byId/${createOrderDto.businessPartnerId}`,
@@ -99,6 +112,8 @@ export class OrderService {
           errorCode: BusinessPartnerErrorCodes.BUSINESS_PARTNER_NOT_FOUND,
         },
       );
+      console.log(businessPartner, 'BUSINESS PARTNER')
+
       const warehouse = await this.httpServiceGet<WarehouseAttributes>(
         `${process.env.API_WAREHOUSE_URL}/warehouse/byId/${createOrderDto.warehouseId}`,
         undefined,
@@ -107,33 +122,41 @@ export class OrderService {
           errorCode: WarehouseErrorCodes.WAREHOUSE_NOT_FOUND,
         },
       );
+      console.log(warehouse, 'WAREHOUSE')
+
       const orderDetaillTemporals = []
       for (let orderDetaillTemporal of createOrderDto.orderDetaillTemporals) {
         const orderDetaillTemporalExist = await this.orderDetaillTemporalService.create(orderDetaillTemporal)
         orderDetaillTemporals.push(orderDetaillTemporalExist)
       }
+      console.log(orderDetaillTemporals, 'ORDER DETAILL TEMPORAL')
 
       const orderDetaills = []
       for (let orderDetail of createOrderDto.orderDetaills) {
         const orderDetailExist = await this.orderDetailService.create(orderDetail)
         orderDetaills.push(orderDetailExist)
       }
+      console.log(orderDetaills, 'ORDER DETAILL')
 
       const orderPays = []
       for (let orderPay of createOrderDto.orderPays) {
         const orderPayExist = await this.orderPayService.create(orderPay)
         orderPays.push(orderPayExist)
       }
+      console.log(orderPays, 'ORDER PAYS')
 
       const orderLogs = []
       for (let orderLog of createOrderDto.orderLogs) {
         const orderLogExist = await this.orderLogService.create(orderLog)
         orderLogs.push(orderLogExist)
       }
+      console.log(orderLogs, 'ORDER LOGS')
+
+      const date = new Date(createOrderDto.deliveryDate)
 
       const newOrder = new this.orderModel({
         code: createOrderDto.code,
-        user: createOrderDto.user,
+        user: user,
         userAddress: createOrderDto.userAddress,
         total: createOrderDto.total,
         tax: createOrderDto.tax,
@@ -143,7 +166,7 @@ export class OrderService {
         orderType: ordertype,
         flagRTN: createOrderDto.flagRTN,
         RTN: createOrderDto.RTN,
-        deliveryDate: createOrderDto.deliveryDate,
+        deliveryDate: date,
         originType: createOrderDto.originType,
         newTotal: createOrderDto.newTotal,
         businessPartner: businessPartner,

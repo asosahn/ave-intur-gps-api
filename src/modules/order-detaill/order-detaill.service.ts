@@ -66,7 +66,7 @@ export class OrderDetaillService {
       orderDetaillCreate.attributeItem = attributeItem
       orderDetaillCreate.quantity = createOrderDetaillDto.quantity
       orderDetaillCreate.price = createOrderDetaillDto.price
-      orderDetaillCreate.quantisubtotalty = createOrderDetaillDto.quantisubtotalty
+      orderDetaillCreate.subtotal = createOrderDetaillDto.subtotal
       orderDetaillCreate.note = createOrderDetaillDto.note
 
       return orderDetaillCreate;

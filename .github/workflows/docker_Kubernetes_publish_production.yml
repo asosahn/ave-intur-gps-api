@@ -8,7 +8,7 @@ jobs:
     name: Change K8s Controller
     runs-on: ubuntu-latest
     env:
-      image_name: 'ave-warehouse-api'
+      image_name: 'ave-delivery-api'
       env_name: 'develop'
       REGISTRY_DO: ${{ secrets.DOCKER_REGISTRY_DO }}
 

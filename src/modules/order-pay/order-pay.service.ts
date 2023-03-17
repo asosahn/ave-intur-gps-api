@@ -7,6 +7,13 @@ import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 import TypeCardAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeCard/typeCard.entity';
 import { TypeCardErrors, TypeCardErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeCard/typeCard.errors';
+import MethodPaymentAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/methodPayment/methodPayment.entity';
+import { MethodPaymentErrors, MethodPaymentErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/methodPayment/methodPayment.errors';
+import AccountPaymentAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/accountPayment/accountPayment.entity';
+import TypeAccountAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeAccount/typeAccount.entity';
+import { TypeAccountErrors, TypeAccountErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/typeAccount/typeAccount.errors';
+import BankAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/bank/bank.entity';
+import { BankErrors, BankErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/bank/bank.errors';
 
 @Injectable()
 export class OrderPayService {
@@ -46,9 +53,44 @@ export class OrderPayService {
         },
       );
 
+      const methodPayment = await this.httpServiceGet<MethodPaymentAttributes>(
+        `${process.env.API_MASTER_URL}/method-payment/byId/${createOrderPayDto.methodPaymentId}`,
+        undefined,
+        {
+          message: MethodPaymentErrors.METHOD_PAYMENT_NOT_FOUND,
+          errorCode: MethodPaymentErrorCodes.METHOD_PAYMENT_NOT_FOUND,
+        },
+      );
+
+      const typeAccount = await this.httpServiceGet<TypeAccountAttributes>(
+        `${process.env.API_MASTER_URL}/type-account/byId/${createOrderPayDto.accountPayment.typeAccountId}`,
+        undefined,
+        {
+          message: TypeAccountErrors.TYPE_ACCOUNT_NOT_FOUND,
+          errorCode: TypeAccountErrorCodes.TYPE_ACCOUNT_NOT_FOUND,
+        },
+      );
+
+      const bank = await this.httpServiceGet<BankAttributes>(
+        `${process.env.API_BANK_URL}/bank/byId/${createOrderPayDto.accountPayment.bankId}`,
+        undefined,
+        {
+          message: BankErrors.BANK_NOT_FOUND,
+          errorCode: BankErrorCodes.BANK_NOT_FOUND,
+        },
+      );
+
+      const accountPayment = new AccountPaymentAttributes()
+      accountPayment.code = createOrderPayDto.accountPayment.code
+      accountPayment.typeAccount = typeAccount
+      accountPayment.bank = bank
+      accountPayment.numberAccount = createOrderPayDto.accountPayment.numberAccount
+      accountPayment.additionalInformation = createOrderPayDto.accountPayment.additionalInformation
+      accountPayment.nameTitular = createOrderPayDto.accountPayment.nameTitular
+
       const orderPayCreate = new OrderPayAttributes();
-      orderPayCreate.methodPayment = createOrderPayDto.methodPayment
-      orderPayCreate.accountPayment = createOrderPayDto.accountPayment
+      orderPayCreate.methodPayment = methodPayment
+      orderPayCreate.accountPayment = accountPayment
       orderPayCreate.operationNumber = createOrderPayDto.operationNumber
       orderPayCreate.document = createOrderPayDto.document
       orderPayCreate.commentError = createOrderPayDto.commentError

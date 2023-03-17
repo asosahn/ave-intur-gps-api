@@ -1,9 +1,9 @@
 {
-  "name": "ave-g-delivery-api",
+  "name": "ave-delivery-api",
   "version": "1.0.0",
-  "description": "AVE G DELIVERY API",
+  "description": "AVE DELIVERY API",
   "author": "",
-  "port": 3017,
+  "port": 3022,
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
