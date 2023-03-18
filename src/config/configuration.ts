@@ -12,6 +12,7 @@ process.env.API_CLIENT_URL = environments.API_CLIENT_URL;
 process.env.API_LOCATION_URL = environments.API_LOCATION_URL;
 process.env.API_ITEM_URL = environments.API_ITEM_URL;
 process.env.API_MASTER_URL = environments.API_MASTER_URL;
+process.env.API_BANK_URL = environments.API_BANK_URL;
 process.env.API_WAREHOUSE_URL = environments.API_WAREHOUSE_URL;
 process.env.LogStashServer = defaultJSON.LogStashServer;
 process.env.LogStashPort = defaultJSON.LogStashPort;

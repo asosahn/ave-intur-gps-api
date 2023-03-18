@@ -52,6 +52,7 @@ export class OrderPayService {
           errorCode: TypeCardErrorCodes.TYPE_CARD_NOT_FOUND,
         },
       );
+      console.log(typeCard, 'TYPE CARD')
 
       const methodPayment = await this.httpServiceGet<MethodPaymentAttributes>(
         `${process.env.API_MASTER_URL}/method-payment/byId/${createOrderPayDto.methodPaymentId}`,
@@ -61,6 +62,7 @@ export class OrderPayService {
           errorCode: MethodPaymentErrorCodes.METHOD_PAYMENT_NOT_FOUND,
         },
       );
+      console.log(methodPayment, 'METHOD PAYMENT')
 
       const typeAccount = await this.httpServiceGet<TypeAccountAttributes>(
         `${process.env.API_MASTER_URL}/type-account/byId/${createOrderPayDto.accountPayment.typeAccountId}`,
@@ -70,6 +72,7 @@ export class OrderPayService {
           errorCode: TypeAccountErrorCodes.TYPE_ACCOUNT_NOT_FOUND,
         },
       );
+      console.log(typeAccount, 'TYPE ACCOUNT')
 
       const bank = await this.httpServiceGet<BankAttributes>(
         `${process.env.API_BANK_URL}/bank/byId/${createOrderPayDto.accountPayment.bankId}`,
@@ -79,6 +82,7 @@ export class OrderPayService {
           errorCode: BankErrorCodes.BANK_NOT_FOUND,
         },
       );
+      console.log(bank, 'BANK')
 
       const accountPayment = new AccountPaymentAttributes()
       accountPayment.code = createOrderPayDto.accountPayment.code

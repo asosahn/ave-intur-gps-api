@@ -92,7 +92,7 @@ export class OrderService {
           errorCode: UserErrorCodes.USER_NOT_FOUND,
         },
       );
-      console.log(user, 'USER')
+      // console.log(user, 'USER')
 
       const ordertype = await this.httpServiceGet<OrderTypeAttributes>(
         `${process.env.API_MASTER_URL}/order-type/byId/${createOrderDto.orderTypeId}`,
@@ -102,7 +102,7 @@ export class OrderService {
           errorCode: OrderTypeErrorCodes.ORDER_TYPE_NOT_FOUND,
         },
       );
-      console.log(ordertype, 'ORDER TYPE')
+      // console.log(ordertype, 'ORDER TYPE')
 
       const businessPartner = await this.httpServiceGet<BusinessPartnerAttributes>(
         `${process.env.API_CLIENT_URL}/business-partner/byId/${createOrderDto.businessPartnerId}`,
@@ -112,7 +112,7 @@ export class OrderService {
           errorCode: BusinessPartnerErrorCodes.BUSINESS_PARTNER_NOT_FOUND,
         },
       );
-      console.log(businessPartner, 'BUSINESS PARTNER')
+      // console.log(businessPartner, 'BUSINESS PARTNER')
 
       const warehouse = await this.httpServiceGet<WarehouseAttributes>(
         `${process.env.API_WAREHOUSE_URL}/warehouse/byId/${createOrderDto.warehouseId}`,
@@ -122,21 +122,21 @@ export class OrderService {
           errorCode: WarehouseErrorCodes.WAREHOUSE_NOT_FOUND,
         },
       );
-      console.log(warehouse, 'WAREHOUSE')
+      // console.log(warehouse, 'WAREHOUSE')
 
       const orderDetaillTemporals = []
       for (let orderDetaillTemporal of createOrderDto.orderDetaillTemporals) {
         const orderDetaillTemporalExist = await this.orderDetaillTemporalService.create(orderDetaillTemporal)
         orderDetaillTemporals.push(orderDetaillTemporalExist)
       }
-      console.log(orderDetaillTemporals, 'ORDER DETAILL TEMPORAL')
+      // console.log(orderDetaillTemporals, 'ORDER DETAILL TEMPORAL')
 
       const orderDetaills = []
       for (let orderDetail of createOrderDto.orderDetaills) {
         const orderDetailExist = await this.orderDetailService.create(orderDetail)
         orderDetaills.push(orderDetailExist)
       }
-      console.log(orderDetaills, 'ORDER DETAILL')
+      // console.log(orderDetaills, 'ORDER DETAILL')
 
       const orderPays = []
       for (let orderPay of createOrderDto.orderPays) {
