@@ -14,6 +14,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { isEmpty } from 'lodash';
 import { LeanDocument } from 'mongoose';
 import {
+  andAllWhere,
   andWhere,
   buildQuery,
   CombinedFilter,
@@ -27,11 +28,20 @@ import { catchError, firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import OrderTypeAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderType/orderType.entity';
-import { OrderTypeErrors, OrderTypeErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderType/orderType.errors';
+import {
+  OrderTypeErrors,
+  OrderTypeErrorCodes,
+} from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderType/orderType.errors';
 import BusinessPartnerAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.entity';
-import { BusinessPartnerErrors, BusinessPartnerErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.errors';
+import {
+  BusinessPartnerErrors,
+  BusinessPartnerErrorCodes,
+} from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.errors';
 import WarehouseAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.entity';
-import { WarehouseErrors, WarehouseErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.errors';
+import {
+  WarehouseErrors,
+  WarehouseErrorCodes,
+} from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.errors';
 import { OrderDetaillTemporalService } from '../order-detaill-temporal/order-detaill-temporal.service';
 import { OrderDetaillService } from '../order-detaill/order-detaill.service';
 import { OrderPayService } from '../order-pay/order-pay.service';
@@ -49,8 +59,8 @@ export class OrderService {
     private orderDetaillTemporalService: OrderDetaillTemporalService,
     private orderDetailService: OrderDetaillService,
     private orderPayService: OrderPayService,
-    private orderLogService: OrderLogService
-  ) { }
+    private orderLogService: OrderLogService,
+  ) {}
 
   async httpServiceGet<T>(
     api: string,
@@ -104,16 +114,15 @@ export class OrderService {
       );
       // console.log(ordertype, 'ORDER TYPE')
 
-      const businessPartner = await this.httpServiceGet<BusinessPartnerAttributes>(
-        `${process.env.API_CLIENT_URL}/business-partner/byId/${createOrderDto.businessPartnerId}`,
-        undefined,
-        {
-          message: BusinessPartnerErrors.BUSINESS_PARTNER_NOT_FOUND,
-          errorCode: BusinessPartnerErrorCodes.BUSINESS_PARTNER_NOT_FOUND,
-        },
-      );
-      // console.log(businessPartner, 'BUSINESS PARTNER')
-
+      const businessPartner =
+        await this.httpServiceGet<BusinessPartnerAttributes>(
+          `${process.env.API_CLIENT_URL}/business-partner/byId/${createOrderDto.businessPartnerId}`,
+          undefined,
+          {
+            message: BusinessPartnerErrors.BUSINESS_PARTNER_NOT_FOUND,
+            errorCode: BusinessPartnerErrorCodes.BUSINESS_PARTNER_NOT_FOUND,
+          },
+        );
       const warehouse = await this.httpServiceGet<WarehouseAttributes>(
         `${process.env.API_WAREHOUSE_URL}/warehouse/byId/${createOrderDto.warehouseId}`,
         undefined,
@@ -122,33 +131,34 @@ export class OrderService {
           errorCode: WarehouseErrorCodes.WAREHOUSE_NOT_FOUND,
         },
       );
-      // console.log(warehouse, 'WAREHOUSE')
-
-      const orderDetaillTemporals = []
+      const orderDetaillTemporals = [];
       for (let orderDetaillTemporal of createOrderDto.orderDetaillTemporals) {
-        const orderDetaillTemporalExist = await this.orderDetaillTemporalService.create(orderDetaillTemporal)
-        orderDetaillTemporals.push(orderDetaillTemporalExist)
+        const orderDetaillTemporalExist =
+          await this.orderDetaillTemporalService.create(orderDetaillTemporal);
+        orderDetaillTemporals.push(orderDetaillTemporalExist);
       }
       // console.log(orderDetaillTemporals, 'ORDER DETAILL TEMPORAL')
 
-      const orderDetaills = []
+      const orderDetaills = [];
       for (let orderDetail of createOrderDto.orderDetaills) {
-        const orderDetailExist = await this.orderDetailService.create(orderDetail)
-        orderDetaills.push(orderDetailExist)
+        const orderDetailExist = await this.orderDetailService.create(
+          orderDetail,
+        );
+        orderDetaills.push(orderDetailExist);
       }
       // console.log(orderDetaills, 'ORDER DETAILL')
 
-      const orderPays = []
+      const orderPays = [];
       for (let orderPay of createOrderDto.orderPays) {
-        const orderPayExist = await this.orderPayService.create(orderPay)
-        orderPays.push(orderPayExist)
+        const orderPayExist = await this.orderPayService.create(orderPay);
+        orderPays.push(orderPayExist);
       }
       console.log(orderPays, 'ORDER PAYS')
 
-      const orderLogs = []
+      const orderLogs = [];
       for (let orderLog of createOrderDto.orderLogs) {
-        const orderLogExist = await this.orderLogService.create(orderLog)
-        orderLogs.push(orderLogExist)
+        const orderLogExist = await this.orderLogService.create(orderLog);
+        orderLogs.push(orderLogExist);
       }
       console.log(orderLogs, 'ORDER LOGS')
 
@@ -174,8 +184,8 @@ export class OrderService {
         orderDetaillTemporals: orderDetaillTemporals,
         orderDetaills: orderDetaills,
         orderPays: orderPays,
-        orderLogs: orderLogs
-      })
+        orderLogs: orderLogs,
+      });
 
       const orderNew = await this.orderModel.createGenId(newOrder);
       return orderNew;
@@ -194,7 +204,7 @@ export class OrderService {
     try {
       const prepareQuery = buildQuery(
         seed(filter as CombinedFilter<OrderAttributes>),
-        where('_deleted', false),
+        andAllWhere('_deleted', false),
       );
       return this.orderModel.getDocuments(prepareQuery);
     } catch (err) {
@@ -212,7 +222,7 @@ export class OrderService {
     try {
       const prepareQuery = buildQuery(
         seed(filter as CombinedFilter<OrderAttributes>),
-        where('_deleted', false),
+        andAllWhere('_deleted', false),
       );
       return this.orderModel.getDocumentsWithCount(prepareQuery);
     } catch (err) {
@@ -230,7 +240,7 @@ export class OrderService {
     try {
       const prepareQuery = buildQuery(
         seed(filter as CombinedFilter<OrderAttributes>),
-        where('_deleted', false),
+        andAllWhere('_deleted', false),
       );
       return this.orderModel.count(prepareQuery);
     } catch (err) {
@@ -248,7 +258,7 @@ export class OrderService {
     try {
       const prepareQuery = buildQuery<OrderAttributes>(
         where('_id', Ops.eq(id, Normalizers.ObjectId)),
-        andWhere('_deleted', false),
+        andAllWhere('_deleted', false),
       );
       return this.orderModel.getDocument(prepareQuery);
     } catch (err) {

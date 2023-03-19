@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: git config --global user.name "ASAP CI"
+      - run: git config --global user.name "AVE CI AV"
       - run: git config --global user.email "developer@albatrosservices.com"
       -
         name: Set up QEMU

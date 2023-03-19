@@ -5,10 +5,18 @@ import { isEmpty } from 'lodash';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
-import ItemAttributes, { AttributeItemAttributes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.entity';
-import { ItemErrors, ItemErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.errors';
+import ItemAttributes, {
+  AttributeItemAttributes,
+} from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.entity';
+import {
+  ItemErrors,
+  ItemErrorCodes,
+} from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.errors';
 import AttributeAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/attribute/attribute.entity';
-import { AttributeErrors, AttributeErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/attribute/attribute.errors';
+import {
+  AttributeErrors,
+  AttributeErrorCodes,
+} from '@albatrosdeveloper/ave-models-npm/lib/schemas/attribute/attribute.errors';
 
 @Injectable()
 export class OrderDetaillService {
@@ -57,9 +65,9 @@ export class OrderDetaillService {
         },
       );
 
-      const attributeItem = new AttributeItemAttributes()
-      attributeItem.attribute = attribute
-      attributeItem.value = createOrderDetaillDto.attributeItem.value
+      const attributeItem = new AttributeItemAttributes();
+      attributeItem.attribute = attribute;
+      attributeItem.value = createOrderDetaillDto.attributeItem.value;
 
       const orderDetaillCreate = new OrderDetaillAttributes();
       orderDetaillCreate.item = item
@@ -69,7 +77,7 @@ export class OrderDetaillService {
       orderDetaillCreate.subtotal = createOrderDetaillDto.subtotal
       orderDetaillCreate.note = createOrderDetaillDto.note
 
-      return orderDetaillCreate;
+      return orderDetailCreate;
     } catch (err) {
       throw new HttpException(
         {
