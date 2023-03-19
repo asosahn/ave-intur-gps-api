@@ -69,13 +69,13 @@ export class OrderDetaillService {
       attributeItem.attribute = attribute;
       attributeItem.value = createOrderDetaillDto.attributeItem.value;
 
-      const orderDetaillCreate = new OrderDetaillAttributes();
-      orderDetaillCreate.item = item
-      orderDetaillCreate.attributeItem = attributeItem
-      orderDetaillCreate.quantity = createOrderDetaillDto.quantity
-      orderDetaillCreate.price = createOrderDetaillDto.price
-      orderDetaillCreate.subtotal = createOrderDetaillDto.subtotal
-      orderDetaillCreate.note = createOrderDetaillDto.note
+      const orderDetailCreate = new OrderDetaillAttributes();
+      orderDetailCreate.item = item
+      orderDetailCreate.attributeItem = attributeItem
+      orderDetailCreate.quantity = createOrderDetaillDto.quantity
+      orderDetailCreate.price = createOrderDetaillDto.price
+      orderDetailCreate.subtotal = createOrderDetaillDto.subtotal
+      orderDetailCreate.note = createOrderDetaillDto.note
 
       return orderDetailCreate;
     } catch (err) {
