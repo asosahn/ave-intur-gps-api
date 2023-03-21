@@ -6,5 +6,6 @@
   "API_MASTER_URL": "https://dgpapi.aveapplications.com/master/v1/api",
   "API_WAREHOUSE_URL": "https://dgpapi.aveapplications.com/warehouse/v1/api",
   "API_ITEM_URL": "https://dgpapi.aveapplications.com/item/v1/api",
-  "API_BANK_URL": "https://dgpapi.aveapplications.com/BANK/v1/api"
+  "API_BANK_URL": "https://dgpapi.aveapplications.com/BANK/v1/api",
+  "API_AUTH_URL": "https://dgpapi.aveapplications.com/auth/v1/api"
 }

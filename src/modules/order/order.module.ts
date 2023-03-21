@@ -8,6 +8,9 @@ import { OrderPayModule } from '../order-pay/order-pay.module';
 import { OrderLogModule } from '../order-log/order-log.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import Order, { OrderSchema } from '@albatrosdeveloper/ave-models-npm/lib/schemas/order/order.schema';
+import { UserModule } from '../../utils/user/user.module';
+import { OrderModuleUtils } from '../../utils/order/orderUtil.module';
+import { ItemModule } from '../../utils/item/item.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import Order, { OrderSchema } from '@albatrosdeveloper/ave-models-npm/lib/schema
     OrderDetaillTemporalModule,
     OrderPayModule,
     OrderLogModule,
+    UserModule,
+    OrderModuleUtils,
+    ItemModule,
     MongooseModule.forFeature([
       {
         name: Order.name,
@@ -25,6 +31,6 @@ import Order, { OrderSchema } from '@albatrosdeveloper/ave-models-npm/lib/schema
     ]),
   ],
   controllers: [OrderController],
-  providers: [OrderService]
+  providers: [OrderService],
 })
-export class OrderModule { }
+export class OrderModule {}

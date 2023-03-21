@@ -41,7 +41,7 @@ export class OrderPayService {
   }
 
   async create(
-    createOrderPayDto: CreateOrderPayDto,
+    createOrderPayDto: CreateOrderPayDto & any,
   ): Promise<OrderPayAttributes> {
     try {
       const typeCard = await this.httpServiceGet<TypeCardAttributes>(
@@ -84,7 +84,7 @@ export class OrderPayService {
       );
       console.log(bank, 'BANK')
 
-      const accountPayment = new AccountPaymentAttributes()
+      const accountPayment: any = new AccountPaymentAttributes()
       accountPayment.code = createOrderPayDto.accountPayment.code
       accountPayment.typeAccount = typeAccount
       accountPayment.bank = bank
