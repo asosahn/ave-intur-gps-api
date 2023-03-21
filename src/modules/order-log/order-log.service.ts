@@ -9,9 +9,7 @@ import { AxiosError } from 'axios';
 @Injectable()
 export class OrderLogService {
   private readonly logger = new Logger(OrderLogService.name);
-  constructor(
-    private readonly httpService: HttpService,
-  ) { }
+  constructor(private readonly httpService: HttpService) {}
 
   async httpServiceGet<T>(
     api: string,
@@ -38,8 +36,8 @@ export class OrderLogService {
   ): Promise<OrderLogAttributes> {
     try {
       const orderLogCreate = new OrderLogAttributes();
-      orderLogCreate.type = createOrderLogDto.type
-      orderLogCreate.reason = createOrderLogDto.reason
+      orderLogCreate.type = createOrderLogDto.type;
+      orderLogCreate.reason = createOrderLogDto.reason;
 
       return orderLogCreate;
     } catch (err) {
@@ -52,6 +50,4 @@ export class OrderLogService {
       );
     }
   }
-
-
 }
