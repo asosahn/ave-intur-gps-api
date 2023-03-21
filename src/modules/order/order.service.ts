@@ -231,7 +231,7 @@ export class OrderService {
           await this.orderServiceUtil.validateStock(order);
           return cleanDeep(order);
         },
-        { concurrency: 1 },
+        { concurrency: 10 },
       );
       return ordersValidated;
     } catch (err) {
