@@ -108,9 +108,11 @@ export class OrderService {
       token?: string;
     },
   ) {
-    const userPayload = user ?? createOrderDto.user;
+    const userPayload = createOrderDto.user || user;
     const userPromise = this.httpServiceGet<UserAttributes>(
-      `${this.configService.get('API_USER_URL')}/user/byId/${userPayload._id}`,
+      `${this.configService.get('API_CLIENT_URL')}/user/byId/${
+        userPayload._id
+      }`,
       undefined,
       {
         message: UserErrors.USER_NOT_FOUND,
@@ -166,7 +168,7 @@ export class OrderService {
       tax: createOrderDto.tax,
       discount: createOrderDto.discount,
       deliveryPrice: createOrderDto.deliveryPrice,
-      status: createOrderDto.status,
+      status: createOrderDto.status || '1',
       orderType: ordertype,
       flagRTN: createOrderDto.flagRTN,
       RTN: createOrderDto.RTN,
@@ -175,6 +177,8 @@ export class OrderService {
       newTotal: createOrderDto.newTotal,
       businessPartner: businessPartner,
       warehouse: warehouse,
+      courier: createOrderDto.courier,
+      deliveryTax: createOrderDto.deliveryTax,
     });
     if (createOrderDto.orderDetaills) {
       const orderDetaills = [];
