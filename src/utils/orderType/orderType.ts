@@ -43,7 +43,15 @@ class PickupClass implements CheckOrderInterface {
 }
 
 export default class CheckOrderClass implements CheckOrderInterface {
-  constructor({ orderType, order, instance }: { orderType: OrderType; order: Partial<OrderAttributes>; instance?: OrderServiceUtil }) {
+  constructor({
+    orderType,
+    order,
+    instance,
+  }: {
+    orderType: OrderType;
+    order: Partial<OrderAttributes>;
+    instance?: OrderServiceUtil;
+  }) {
     if (orderType.code === 'PK') {
       return new PickupClass(order, instance);
     } else if (orderType.code === 'PD') {

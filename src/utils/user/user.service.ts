@@ -36,6 +36,7 @@ export class UserService {
     ) as CombinedFilter<UserAttributes>;
     return this.userModel.getDocument(query);
   }
+
   async getSuperUserById(id: string) {
     const query = buildQuery<SuperUserAttributes>(
       where('_id', Ops.eq(id, Normalizers.ObjectId)),

@@ -78,7 +78,9 @@ export class OrderServiceUtil {
     }
     const momentConfig = moment().locale('es');
     const currentDayName = toLower(momentConfig.format('dddd'));
-    const getSchedule = warehouseSchedule.find((scd) => toLower(scd.name) === currentDayName && scd.active === '1');
+    const getSchedule = warehouseSchedule.find(
+      (scd) => toLower(scd.name) === currentDayName && scd.active === '1',
+    );
     if (!getSchedule) {
       validation = {
         error: true,
@@ -107,11 +109,14 @@ export class OrderServiceUtil {
       if (!wareHouseId) {
         return undefined;
       }
-      const { data } = await this.httpService.axiosRef.get<WarehouseAttributes>(`${API_WAREHOUSE_URL}/warehouse/byId/${toString(wareHouseId)}`, {
-        headers: {
-          Authorization: token,
+      const { data } = await this.httpService.axiosRef.get<WarehouseAttributes>(
+        `${API_WAREHOUSE_URL}/warehouse/byId/${toString(wareHouseId)}`,
+        {
+          headers: {
+            Authorization: token,
+          },
         },
-      });
+      );
       return data;
     } catch (error) {
       this.logger.error(error?.response?.data);
@@ -119,7 +124,10 @@ export class OrderServiceUtil {
     }
   }
 
-  async getWarehouseWithOrderData(order: Partial<OrderAttributes>, token?: string) {
+  async getWarehouseWithOrderData(
+    order: Partial<OrderAttributes>,
+    token?: string,
+  ) {
     try {
       return await this.getWarehouse(order, token);
     } catch (err) {
@@ -127,8 +135,12 @@ export class OrderServiceUtil {
     }
   }
 
-  async userValidation(user: Partial<UserAttributes>): Promise<Record<string, any>> {
-    const userValidation = await this.userService.getUserById(<string>toString(user._id));
+  async userValidation(
+    user: Partial<UserAttributes>,
+  ): Promise<Record<string, any>> {
+    const userValidation = await this.userService.getUserById(
+      <string>toString(user._id),
+    );
     let validation = undefined;
     if (!userValidation) {
       validation = {
@@ -152,7 +164,9 @@ export class OrderServiceUtil {
 
   async validateStock(order: Partial<OrderAttributes>) {
     // Fetch all items associated with the order
-    const getItems: Partial<OrderAttributes>[] | any[] = await this.itemService.findItemsForOrder(order);
+    const getItems: Partial<OrderAttributes>[] | any[] =
+      await this.itemService.findItemsForOrder(order);
+    console.log(getItems);
     // Get the list of items from the order details
     const itemFromOrder = get(order, 'orderDetails', []);
 
@@ -166,14 +180,24 @@ export class OrderServiceUtil {
       // If the item has no variant or attributes
       if (!item.variant && !item.attributes) {
         // Find the item in the list of all items and get its stock from the warehouse
-        itemFromStock = getItems.find((it) => toString(it._id) === toString(item.item?._id));
+        itemFromStock = getItems.find(
+          (it) => toString(it._id) === toString(item.item?._id),
+        );
         realStock = get(itemFromStock, 'warehouseItem.stock', 0);
       } else {
         // If the item has a variant or attributes, find the item with the corresponding variant ID
-        itemFromStock = getItems.find((it) => toString(it._id) === toString(item.item?._id) && it.warehouseItem.variants.map((v) => toString(v._id)).includes(toString(item.variant?._id)));
+        itemFromStock = getItems.find(
+          (it) =>
+            toString(it._id) === toString(item.item?._id) &&
+            it.warehouseItem.variants
+              .map((v) => toString(v._id))
+              .includes(toString(item.variant?._id)),
+        );
         // Get the stock for the specific variant
         realStock = get(
-          get(itemFromStock, 'warehouseItem.variants', []).find((v) => toString(v._id) === toString(item.variant?._id)),
+          get(itemFromStock, 'warehouseItem.variants', []).find(
+            (v) => toString(v._id) === toString(item.variant?._id),
+          ),
           'stock',
           0,
         );

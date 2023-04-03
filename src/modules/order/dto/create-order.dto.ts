@@ -1,10 +1,29 @@
-import OrderAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/order/order.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsMongoId, IsBoolean, IsOptional, IsObject, IsArray, IsDate, IsDecimal } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsMongoId,
+  IsBoolean,
+  IsOptional,
+  IsObject,
+  IsDate,
+  IsDecimal,
+  IsNumber,
+  ValidateNested,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
-import Address from '@albatrosdeveloper/ave-models-npm/lib/schemas/address/address.schema';
 import AddressAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/address/address.entity';
 import { Types } from 'mongoose';
+import OrderAttributes, {
+  OrderCourierAttributes,
+} from '@albatrosdeveloper/ave-models-npm/lib/schemas/order/order.entity';
+import UserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.entity';
+import BusinessPartnerAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.entity';
+import WarehouseAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.entity';
+import OrderTypeAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderType/orderType.entity';
+import { CreateOrderDetaillDto } from 'src/modules/order-detaill/dto/create-order-detaill.dto';
+import OrderDetaillAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetaill/orderDetaill.entity';
 
 class UserDto {
   @ApiProperty({
@@ -110,94 +129,83 @@ class UserAddress extends AddressAttributes {
   _id: Types.ObjectId & string;
 }
 
-export class CreateOrderDto {
-  @ApiProperty({
-    required: true,
-  })
-  @Type(() => UserDto)
-  @IsNotEmpty()
-  user: UserDto;
+export class CreateOrderDto extends OrderAttributes {
+  @ApiProperty()
+  @IsNumber()
+  id: number;
 
-  @ApiProperty({
-    required: true,
-  })
-  @Type(() => UserAddress)
-  @IsNotEmpty()
-  userAddress: UserAddress;
-
-  @ApiProperty({
-    required: true,
-  })
+  @ApiProperty()
   @IsObject()
-  @IsNotEmpty()
-  businessPartner: Record<string, any>;
+  user: UserAttributes;
 
-  @ApiProperty({
-    required: true,
-  })
+  @ApiProperty()
   @IsObject()
-  @IsNotEmpty()
-  warehouse: Record<string, any>;
+  userAddress: AddressAttributes;
 
-  @ApiProperty({
-    required: true,
-  })
+  @ApiProperty()
   @IsObject()
-  @IsNotEmpty()
-  orderType: Record<string, any>;
+  businessPartner: BusinessPartnerAttributes;
+
+  @ApiProperty()
+  @IsObject()
+  warehouse: WarehouseAttributes;
+
+  @ApiProperty()
+  @IsObject()
+  orderType: OrderTypeAttributes;
 
   @ApiProperty({
-    required: true,
+    type: [CreateOrderDetaillDto],
   })
+  @ValidateNested()
+  @IsObject({ each: true })
+  @IsArray()
   @IsNotEmpty()
-  orderDetails: Record<string, any>[];
+  orderDetaills: CreateOrderDetaillDto[];
 
-  @ApiProperty({
-    required: true,
-  })
+  @ApiProperty()
+  @IsBoolean()
+  isProgrammed: boolean;
+
+  @ApiProperty()
   @IsDate()
-  @IsNotEmpty()
+  @Type(() => Date)
+  programmedDate: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
   deliveryDate: Date;
 
-  @ApiProperty({
-    required: true,
-  })
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
   originType: string;
 
-  @ApiProperty({
-    required: true,
-  })
-  @IsDecimal()
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsNumber()
   total: number;
 
-  @ApiProperty({
-    required: true,
-  })
-  @IsDecimal()
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsNumber()
   tax: number;
 
-  @ApiProperty({
-    required: true,
-  })
-  @IsDecimal()
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsNumber()
   discount: number;
 
-  @ApiProperty({
-    required: true,
-  })
-  @IsDecimal()
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsNumber()
   deliveryPrice: number;
 
-  @ApiProperty({
-    required: true,
-  })
-  @IsDecimal()
-  @IsNotEmpty()
+  @ApiProperty()
+  @IsNumber()
+  deliveryTax: number;
+
+  @ApiProperty()
+  @IsNumber()
   newTotal: number;
+
+  @ApiProperty()
+  @IsObject()
+  courier: OrderCourierAttributes;
 }
