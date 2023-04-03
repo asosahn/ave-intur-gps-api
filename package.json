@@ -22,7 +22,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@albatrosdeveloper/ave-models-npm": "^1.0.112",
+    "@albatrosdeveloper/ave-models-npm": "^1.0.113",
     "@albatrosdeveloper/ave-utils-npm": "^1.0.7",
     "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.0.0",
