@@ -10,6 +10,7 @@ import {
   ItemErrors,
   ItemErrorCodes,
 } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.errors';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class OrderDetaillService {
@@ -64,6 +65,7 @@ export class OrderDetaillService {
       orderDetailCreate.price = createOrderDetaillDto.price;
       orderDetailCreate.subtotal = createOrderDetaillDto.subtotal;
       orderDetailCreate.note = createOrderDetaillDto.note;
+      orderDetailCreate._id = new Types.ObjectId();
       return orderDetailCreate;
     } catch (err) {
       throw new HttpException(
