@@ -214,6 +214,7 @@ export class OrderService {
           token,
         });
         const result = {
+          id: orderAttribute.id,
           error: false,
           errors: [],
           curiers: [],
