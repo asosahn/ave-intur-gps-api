@@ -2,7 +2,12 @@ import OrderAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/order
 import { noop } from 'lodash';
 import { OrderServiceUtil } from '../order/orderUtil.service';
 
-export type OrderCodeType = 'PK' | 'PD' | 'PU';
+export type OrderCodeType = 'OTM0002' | 'OTM0001';
+
+export enum OrderCodeTypeEnum {
+    DELIVERY = 'OTM0001',
+    PICKUP = 'OTM0002',
+}
 
 export type OrderType = {
   code: OrderCodeType;
@@ -12,21 +17,14 @@ export interface CheckOrderInterface {
 }
 class DeliveryClass implements CheckOrderInterface {
   order: Partial<OrderAttributes>;
-  constructor(order: Partial<OrderAttributes>) {
+  instance: OrderServiceUtil;
+  constructor(order: Partial<OrderAttributes>, instance: OrderServiceUtil) {
     this.order = order;
+    this.instance = instance;
   }
-  async validator(order: any) {
-    order.deliveryPrice = Math.random() * 8.99 + 2.0;
-    return undefined;
-  }
-}
-class TakeawayClass implements CheckOrderInterface {
-  order: Partial<OrderAttributes>;
-  constructor(order: Partial<OrderAttributes>) {
-    this.order = order;
-  }
-  async validator(order: any) {
-    return order;
+  async validator(order: any): Promise<any> {
+    const validation = await this.instance.validateScheduleWarehouse(order, OrderCodeTypeEnum.DELIVERY, order.deliveryDate);
+    return { validation, couriers: [] };
   }
 }
 class PickupClass implements CheckOrderInterface {
@@ -37,27 +35,17 @@ class PickupClass implements CheckOrderInterface {
     this.instance = instance;
   }
   async validator(order: any): Promise<any> {
-    const validation = await this.instance.validateScheduleWarehouse(order);
-    return validation;
+    const validation = await this.instance.validateScheduleWarehouse(order, OrderCodeTypeEnum.PICKUP, order.programmedDate);
+    return { validation };
   }
 }
 
 export default class CheckOrderClass implements CheckOrderInterface {
-  constructor({
-    orderType,
-    order,
-    instance,
-  }: {
-    orderType: OrderType;
-    order: Partial<OrderAttributes>;
-    instance?: OrderServiceUtil;
-  }) {
-    if (orderType.code === 'PK') {
+  constructor({ orderType, order, instance }: { orderType: OrderType; order: Partial<OrderAttributes>; instance?: OrderServiceUtil }) {
+    if (orderType.code === OrderCodeTypeEnum.PICKUP) {
       return new PickupClass(order, instance);
-    } else if (orderType.code === 'PD') {
-      return new DeliveryClass(order);
-    } else if (orderType.code === 'PU') {
-      return new TakeawayClass(order);
+    } else if (orderType.code === OrderCodeTypeEnum.DELIVERY) {
+      return new DeliveryClass(order, instance);
     }
   }
   async validator(order: any) {
