@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { HttpModule } from '@nestjs/axios';
-import { OrderDetaillModule } from '../order-detaill/order-detaill.module';
-import { OrderDetaillTemporalModule } from '../order-detaill-temporal/order-detaill-temporal.module';
+import { OrderDetailModule } from '../order-detail/order-detail.module';
+import { OrderDetailTemporalModule } from '../order-detail-temporal/order-detail-temporal.module';
 import { OrderPayModule } from '../order-pay/order-pay.module';
 import { OrderLogModule } from '../order-log/order-log.module';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -15,8 +15,8 @@ import { ItemModule } from '../../utils/item/item.module';
 @Module({
   imports: [
     HttpModule,
-    OrderDetaillModule,
-    OrderDetaillTemporalModule,
+    OrderDetailModule,
+    OrderDetailTemporalModule,
     OrderPayModule,
     OrderLogModule,
     UserModule,

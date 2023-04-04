@@ -22,8 +22,7 @@ import UserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/u
 import BusinessPartnerAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.entity';
 import WarehouseAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.entity';
 import OrderTypeAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderType/orderType.entity';
-import { CreateOrderDetaillDto } from 'src/modules/order-detaill/dto/create-order-detaill.dto';
-import OrderDetaillAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetaill/orderDetaill.entity';
+import { CreateOrderDetaillDto } from 'src/modules/order-detail/dto/create-order-detail.dto';
 
 class UserDto {
   @ApiProperty({

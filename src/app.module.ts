@@ -6,8 +6,8 @@ import { PingModule } from './modules/ping/ping.module';
 import configuration from './config/configuration';
 import { MongooseModule } from '@nestjs/mongoose';
 import { OrderLogModule } from './modules/order-log/order-log.module';
-import { OrderDetaillTemporalModule } from './modules/order-detaill-temporal/order-detaill-temporal.module';
-import { OrderDetaillModule } from './modules/order-detaill/order-detaill.module';
+import { OrderDetailTemporalModule } from './modules/order-detail-temporal/order-detail-temporal.module';
+import { OrderDetailModule } from './modules/order-detail/order-detail.module';
 import { OrderPayModule } from './modules/order-pay/order-pay.module';
 import { OrderModule } from './modules/order/order.module';
 
@@ -25,8 +25,8 @@ import { OrderModule } from './modules/order/order.module';
     }),
     PingModule,
     OrderLogModule,
-    OrderDetaillTemporalModule,
-    OrderDetaillModule,
+    OrderDetailTemporalModule,
+    OrderDetailModule,
     OrderPayModule,
     OrderModule,
   ],

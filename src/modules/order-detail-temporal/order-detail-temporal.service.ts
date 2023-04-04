@@ -1,6 +1,6 @@
-import OrderDetaillTemporalAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetaillTemporal/orderDetaillTemporal.entity';
+import OrderDetailTemporalAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetailTemporal/orderDetailTemporal.entity';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { CreateOrderDetaillTemporalDto } from './dto/create-order-detaill-temporal.dto';
+import { CreateOrderDetailTemporalDto } from './dto/create-order-detail-temporal.dto';
 import { isEmpty } from 'lodash';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
@@ -11,8 +11,8 @@ import AttributeAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/a
 import { AttributeErrors, AttributeErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/attribute/attribute.errors';
 
 @Injectable()
-export class OrderDetaillTemporalService {
-  private readonly logger = new Logger(OrderDetaillTemporalService.name);
+export class OrderDetailTemporalService {
+  private readonly logger = new Logger(OrderDetailTemporalService.name);
   constructor(private readonly httpService: HttpService) { }
 
   async httpServiceGet<T>(
@@ -36,11 +36,11 @@ export class OrderDetaillTemporalService {
   }
 
   async create(
-    createOrderDetaillTemporalDto: CreateOrderDetaillTemporalDto,
-  ): Promise<OrderDetaillTemporalAttributes> {
+    createOrderDetailTemporalDto: CreateOrderDetailTemporalDto,
+  ): Promise<OrderDetailTemporalAttributes> {
     try {
       const item = await this.httpServiceGet<ItemAttributes>(
-        `${process.env.API_ITEM_URL}/item/byId/${createOrderDetaillTemporalDto.itemId}`,
+        `${process.env.API_ITEM_URL}/item/byId/${createOrderDetailTemporalDto.itemId}`,
         undefined,
         {
           message: ItemErrors.ITEM_NOT_FOUND,
@@ -48,7 +48,7 @@ export class OrderDetaillTemporalService {
         },
       );
       const attribute = await this.httpServiceGet<AttributeAttributes>(
-        `${process.env.API_MASTER_URL}/attribute/byId/${createOrderDetaillTemporalDto.attributeItem.atributeId}`,
+        `${process.env.API_MASTER_URL}/attribute/byId/${createOrderDetailTemporalDto.attributeItem.atributeId}`,
         undefined,
         {
           message: AttributeErrors.ATTRIBUTE_NOT_FOUND,
@@ -58,14 +58,14 @@ export class OrderDetaillTemporalService {
 
       const attributeItem = new AttributeItemAttributes()
       attributeItem.attribute = attribute
-      attributeItem.value = createOrderDetaillTemporalDto.attributeItem.value
+      attributeItem.value = createOrderDetailTemporalDto.attributeItem.value
 
-      const orderDetaillTemporalCreate = new OrderDetaillTemporalAttributes();
+      const orderDetaillTemporalCreate = new OrderDetailTemporalAttributes();
       orderDetaillTemporalCreate.item = item
       orderDetaillTemporalCreate.attributeItem = attributeItem
-      orderDetaillTemporalCreate.quantity = createOrderDetaillTemporalDto.quantity
-      orderDetaillTemporalCreate.status = createOrderDetaillTemporalDto.status
-      orderDetaillTemporalCreate.active = createOrderDetaillTemporalDto.active
+      orderDetaillTemporalCreate.quantity = createOrderDetailTemporalDto.quantity
+      orderDetaillTemporalCreate.status = createOrderDetailTemporalDto.status
+      orderDetaillTemporalCreate.active = createOrderDetailTemporalDto.active
 
       return orderDetaillTemporalCreate;
     } catch (err) {

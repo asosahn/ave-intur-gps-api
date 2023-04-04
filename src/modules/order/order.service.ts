@@ -41,8 +41,8 @@ import {
   WarehouseErrors,
   WarehouseErrorCodes,
 } from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.errors';
-import { OrderDetaillTemporalService } from '../order-detaill-temporal/order-detaill-temporal.service';
-import { OrderDetaillService } from '../order-detaill/order-detaill.service';
+import { OrderDetailTemporalService } from '../order-detail-temporal/order-detail-temporal.service';
+import { OrderDetailService } from '../order-detail/order-detail.service';
 import { OrderPayService } from '../order-pay/order-pay.service';
 import { OrderLogService } from '../order-log/order-log.service';
 import { ConfigService } from '@nestjs/config';
@@ -66,8 +66,8 @@ export class OrderService {
     @InjectModel(Order.name)
     private readonly orderModel: OrderModelExt<OrderDocument>,
     private readonly httpService: HttpService,
-    private orderDetaillTemporalService: OrderDetaillTemporalService,
-    private orderDetailService: OrderDetaillService,
+    private orderDetailTemporalService: OrderDetailTemporalService,
+    private orderDetailService: OrderDetailService,
     private orderPayService: OrderPayService,
     private orderLogService: OrderLogService,
     private configService: ConfigService,
@@ -162,7 +162,7 @@ export class OrderService {
     const date = new Date(createOrderDto.deliveryDate);
     const newOrder = new this.orderModel({
       code: createOrderDto.code,
-      user: user,
+      user: userData,
       userAddress: createOrderDto.userAddress,
       total: createOrderDto.total,
       tax: createOrderDto.tax,
@@ -172,27 +172,30 @@ export class OrderService {
       orderType: ordertype,
       flagRTN: createOrderDto.flagRTN,
       RTN: createOrderDto.RTN,
-      deliveryDate: date,
+      deliveryDate: createOrderDto.deliveryDate ? date : Date.now(),
       originType: createOrderDto.originType,
       newTotal: createOrderDto.newTotal,
+      isProgrammed: createOrderDto.isProgrammed || false,
+      programmedDate: createOrderDto.programmedDate ? new Date(createOrderDto.programmedDate) : null,
       businessPartner: businessPartner,
       warehouse: warehouse,
       courier: createOrderDto.courier,
       deliveryTax: createOrderDto.deliveryTax,
     });
-    if (createOrderDto.orderDetaills) {
-      const orderDetaills = [];
-      for (const orderDetaill of createOrderDto.orderDetaills) {
+    if (createOrderDto.orderDetails) {
+      const orderDetails = [];
+      for (const orderDetail of createOrderDto.orderDetails) {
         const orderDetailExist = await this.orderDetailService.create(
-          orderDetaill,
+          orderDetail,
         );
-        orderDetaills.push(orderDetailExist);
+        orderDetails.push(orderDetailExist);
       }
-      newOrder.orderDetaills = orderDetaills;
+      newOrder.orderDetails = orderDetails;
     }
     const orderNew = await this.orderModel.createGenId(newOrder);
     return orderNew;
   }
+
   async create(
     createOrderDto: CreateOrderDto[],
     {

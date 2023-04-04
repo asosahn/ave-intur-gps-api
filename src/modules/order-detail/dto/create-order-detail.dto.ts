@@ -1,12 +1,12 @@
 import ItemAttributes, {
   VariantAttributes,
 } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.entity';
-import OrderDetaillAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetaill/orderDetaill.entity';
+import OrderDetailAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetail/orderDetail.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 
-export class CreateOrderDetaillDto extends OrderDetaillAttributes {
+export class CreateOrderDetaillDto extends OrderDetailAttributes {
   @ApiProperty()
   @IsObject()
   @Type(() => ItemAttributes)

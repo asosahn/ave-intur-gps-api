@@ -1,6 +1,6 @@
-import OrderDetaillAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetaill/orderDetaill.entity';
+import OrderDetailAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetail/orderDetail.entity';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { CreateOrderDetaillDto } from './dto/create-order-detaill.dto';
+import { CreateOrderDetaillDto } from './dto/create-order-detail.dto';
 import { isEmpty } from 'lodash';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
@@ -13,8 +13,8 @@ import {
 import { Types } from 'mongoose';
 
 @Injectable()
-export class OrderDetaillService {
-  private readonly logger = new Logger(OrderDetaillService.name);
+export class OrderDetailService {
+  private readonly logger = new Logger(OrderDetailService.name);
   constructor(private readonly httpService: HttpService) {}
 
   async httpServiceGet<T>(
@@ -38,13 +38,13 @@ export class OrderDetaillService {
   }
 
   async create(
-    createOrderDetaillDto: CreateOrderDetaillDto,
-  ): Promise<OrderDetaillAttributes> {
+    createOrderDetailDto: CreateOrderDetaillDto,
+  ): Promise<OrderDetailAttributes> {
     try {
       const item = await this.httpServiceGet<ItemAttributes>(
         `${process.env.API_ITEM_URL}/item/byId/${
-          createOrderDetaillDto.item._id.toString() ||
-          createOrderDetaillDto.itemId
+          createOrderDetailDto.item._id.toString() ||
+          createOrderDetailDto.itemId
         }`,
         undefined,
         {
@@ -58,13 +58,13 @@ export class OrderDetaillService {
           errorCode: ItemErrorCodes.ITEM_NOT_FOUND,
         };
       }
-      const orderDetailCreate = new OrderDetaillAttributes();
+      const orderDetailCreate = new OrderDetailAttributes();
       orderDetailCreate.item = item;
-      orderDetailCreate.variant = createOrderDetaillDto.variant;
-      orderDetailCreate.quantity = createOrderDetaillDto.quantity;
-      orderDetailCreate.price = createOrderDetaillDto.price;
-      orderDetailCreate.subtotal = createOrderDetaillDto.subtotal;
-      orderDetailCreate.note = createOrderDetaillDto.note;
+      orderDetailCreate.variant = createOrderDetailDto.variant;
+      orderDetailCreate.quantity = createOrderDetailDto.quantity;
+      orderDetailCreate.price = createOrderDetailDto.price;
+      orderDetailCreate.subtotal = createOrderDetailDto.subtotal;
+      orderDetailCreate.note = createOrderDetailDto.note;
       orderDetailCreate._id = new Types.ObjectId();
       return orderDetailCreate;
     } catch (err) {
