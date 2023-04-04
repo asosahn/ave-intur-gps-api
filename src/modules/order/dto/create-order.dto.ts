@@ -135,6 +135,7 @@ export class CreateOrderDto extends OrderAttributes {
 
   @ApiProperty()
   @IsObject()
+  @IsOptional()
   user: UserAttributes;
 
   @ApiProperty()
