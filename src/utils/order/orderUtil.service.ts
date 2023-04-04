@@ -82,7 +82,7 @@ export class OrderServiceUtil {
         errorCode: 'NOT_SCHEDULE_FOR_TODAY',
       };
     }
-    const momentConfig = dateTime ? moment(dateTime).locale('es') : moment().locale('es');
+    const momentConfig = dateTime ? moment(dateTime).tz('America/Tegucigalpa').locale('es') : moment().tz('America/Tegucigalpa').locale('es');
     const currentDayName = toLower(momentConfig.format('dddd'));
     const getSchedule = warehouseSchedule.find((scd) => toLower(scd.name) === currentDayName && scd.active === '1');
     if (!getSchedule) {
@@ -93,8 +93,8 @@ export class OrderServiceUtil {
       };
     }
     const { hourStart, hourEnd } = getSchedule;
-    const start = moment(hourStart, 'HH:mm');
-    const end = moment(hourEnd, 'HH:mm');
+    const start = moment(hourStart, 'HH:mm').tz('America/Tegucigalpa');
+    const end = moment(hourEnd, 'HH:mm').tz('America/Tegucigalpa');
     const isBetween = momentConfig.isBetween(start, end);
     if (!isBetween) {
       validation = {
