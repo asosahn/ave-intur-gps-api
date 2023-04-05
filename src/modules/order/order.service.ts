@@ -213,7 +213,9 @@ export class OrderService {
         orders,
         async (order) => {
           let checkUser;
-          if (user || order.user) {
+          if ((!isEmpty(user) || !isEmpty(order?.user)) && type === ValidationTypeEnum.PRE_CREATE) {
+            checkUser = await this.orderServiceUtil.userValidation(!isEmpty(user) ? user : order.user, order?.userAddress);
+          } else if (type === ValidationTypeEnum.CREATE) {
             checkUser = await this.orderServiceUtil.userValidation(!isEmpty(user) ? user : order.user, order?.userAddress);
           }
           let businessPartnerValidation;
