@@ -41,14 +41,14 @@ class DeliveryClass implements CheckOrderInterface {
     const body = [
       {
         origin: {
-          country: this.order?.warehouse?.country,
-          locationOne: this.order?.warehouse?.locationOne,
-          locationTwo: this.order?.warehouse?.locationTwo,
-          locationThree: this.order?.warehouse?.locationThree,
-          address: this.order?.warehouse?.address,
-          reference: this.order?.warehouse?.reference,
-          latitude: this.order?.warehouse?.latitude,
-          longitude: this.order?.warehouse?.longitude,
+          country: this.order?.warehouse?.address?.country,
+          locationOne: this.order?.warehouse?.address?.locationOne,
+          locationTwo: this.order?.warehouse?.address?.locationTwo,
+          locationThree: this.order?.warehouse?.address?.locationThree,
+          address: this.order?.warehouse?.address?.address,
+          reference: this.order?.warehouse?.address?.reference,
+          latitude: this.order?.warehouse?.address?.latitude,
+          longitude: this.order?.warehouse?.address?.longitude,
         },
         destiny: {
           country: this.order?.userAddress?.country,
@@ -60,6 +60,7 @@ class DeliveryClass implements CheckOrderInterface {
           latitude: this.order?.userAddress?.latitude,
           longitude: this.order?.userAddress?.longitude,
         },
+        couriers: this.order?.warehouse?.couriers ?? [],
       },
     ];
     const [validation, couriers] = await Promise.all([
