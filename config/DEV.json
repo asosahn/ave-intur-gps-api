@@ -7,5 +7,6 @@
   "API_WAREHOUSE_URL": "https://dgpapi.aveapplications.com/warehouse/v1/api",
   "API_ITEM_URL": "https://dgpapi.aveapplications.com/item/v1/api",
   "API_BANK_URL": "https://dgpapi.aveapplications.com/BANK/v1/api",
-  "API_AUTH_URL": "https://dgpapi.aveapplications.com/auth/v1/api"
+  "API_AUTH_URL": "https://dgpapi.aveapplications.com/auth/v1/api",
+  "DELIVERY_COURIERS_URL": "https://delivery.pla22agurus.com:2052/api/delivery/courier/get_list/origin"
 }

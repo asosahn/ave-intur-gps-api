@@ -31,10 +31,11 @@ import SuperUserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/s
 import { UserErrorCodes, UserErrors } from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.errors';
 import * as PromiseB from 'bluebird';
 import { OrderServiceUtil } from '../../utils/order/orderUtil.service';
+import { ValidationTypeEnum } from '../../utils/orderType/orderType';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const cleanDeep = require('clean-deep');
 
-const RESPONSE_VALIDATE_ORDERS_FIELDS = ['errors', 'error', 'id', 'orderDetails'];
+const RESPONSE_VALIDATE_ORDERS_FIELDS = ['errors', 'error', 'id', 'orderDetails', 'couriers'];
 
 @Injectable()
 export class OrderService {
@@ -158,7 +159,7 @@ export class OrderService {
   }
 
   async create(
-    createOrderDto: CreateOrderDto[],
+    createOrderDto: CreateOrderDto[] | any,
     {
       user,
       token,
@@ -169,6 +170,11 @@ export class OrderService {
   ): Promise<OrderAttributes | any> {
     try {
       const results = [];
+      const validateOrder: Array<Record<string, any>> | any = await this.validateOrder(createOrderDto, { user, token }, ValidationTypeEnum.CREATE);
+      const findErrors = validateOrder.some((order) => order.error);
+      if (findErrors) {
+        return validateOrder;
+      }
       for (const orderAttribute of createOrderDto) {
         const orderNew = await this.createOrder(orderAttribute, {
           user,
@@ -199,7 +205,8 @@ export class OrderService {
 
   async validateOrder(
     orders: Partial<OrderAttributes> | CreateOrderDto,
-    { user, token }: { user: UserAttributes; token?: string },
+    { user, token }: { user: UserAttributes | Partial<UserAttributes>; token?: string },
+    type = ValidationTypeEnum.PRE_CREATE,
   ): Promise<OrderAttributes | void> {
     try {
       const ordersValidated = await PromiseB.map(
@@ -220,7 +227,7 @@ export class OrderService {
           const warehouse = await this.orderServiceUtil.getWarehouseWithOrderData(order);
           order.warehouse = warehouse;
           const validationWarehouse = this.orderServiceUtil.validateWarehouse(order);
-          const { validation: validationOrderType, couriers } = await this.orderServiceUtil.checkOrderType(order);
+          const { validation: validationOrderType, couriers, couriersValidation } = await this.orderServiceUtil.checkOrderType(order, type);
           order.couriers = couriers ?? [];
           // const validateLocationWarehouse = await this.orderServiceUtil.validateLocationWarehouse(order);
           const validateOrdersDetailsGeneral = await this.orderServiceUtil.validateStock(order);
@@ -232,6 +239,7 @@ export class OrderService {
             checkUser,
             businessPartnerValidation,
             validateOrdersDetailsGeneral,
+            couriersValidation,
           ]);
           order.error = size(order.errors) > 0;
           const preOrder = pick(order, RESPONSE_VALIDATE_ORDERS_FIELDS);

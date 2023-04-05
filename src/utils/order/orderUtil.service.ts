@@ -1,9 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OrderAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/order/order.entity';
-import CheckOrderClass, { OrderCodeType, OrderCodeTypeEnum, OrderType } from '../orderType/orderType';
+import CheckOrderClass, {
+  OrderCodeType,
+  OrderCodeTypeEnum,
+  OrderType,
+  ValidationTypeEnum,
+} from '../orderType/orderType';
 import { UserService } from '../user/user.service';
 import UserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.entity';
-import { toString, get, toLower, size, isNil, isUndefined, first } from 'lodash';
+import { toString, get, toLower, size, isNil, isUndefined, first, deburr } from 'lodash';
 import { UserErrors } from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.errors';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +17,7 @@ import * as moment from 'moment-timezone';
 import { ItemService } from '../item/item.service';
 import { andAllWhere, buildQuery, Normalizers, Ops, where } from '@albatrosdeveloper/ave-utils-npm/lib/utils/query.util';
 import BusinessPartnerAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.entity';
+
 
 export type ValidationType = {
   error: boolean;
@@ -83,7 +89,7 @@ export class OrderServiceUtil {
       };
     }
     const momentConfig = dateTime ? moment(dateTime).tz('America/Tegucigalpa').locale('es') : moment().tz('America/Tegucigalpa').locale('es');
-    const currentDayName = toLower(momentConfig.format('dddd'));
+    const currentDayName = deburr(toLower(momentConfig.format('dddd')));
     const getSchedule = warehouseSchedule.find((scd) => toLower(scd.name) === currentDayName && scd.active === '1');
     if (!getSchedule) {
       validation = {
@@ -279,13 +285,17 @@ export class OrderServiceUtil {
     return validation;
   }
 
-  async checkOrderType(order: Partial<OrderAttributes>): Promise<Record<string, any> | { validation: Record<string, any> } | any> {
+  async checkOrderType(
+    order: Partial<OrderAttributes>,
+    type: ValidationTypeEnum,
+  ): Promise<Record<string, any> | { validation: Record<string, any> } | any> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const orderTypeValidation = new CheckOrderClass({
       orderType: <OrderType>(<unknown>order.orderType),
       order,
       instance: self,
+      type,
     });
     return orderTypeValidation.validator(order);
   }
