@@ -189,15 +189,15 @@ export class OrderServiceUtil {
         message: UserErrors.USER_NOT_FOUND,
       };
     }
-    if (!isNil(userAddress) || !isUndefined(userAddress)) {
-      const addresses = get(userValidation, 'address', []).filter((address) => address.active === '1' && userAddress._id === toString(address._id));
-      if (size(addresses) <= 0) {
-        validation = {
-          error: true,
-          message: 'USER_ADDRESS_NOT_FOUND',
-        };
-      }
-    }
+    // if (!isNil(userAddress) || !isUndefined(userAddress)) {
+    //   const addresses = get(userValidation, 'address', []).filter((address) => address.active === '1' && userAddress._id === toString(address._id));
+    //   if (size(addresses) <= 0) {
+    //     validation = {
+    //       error: true,
+    //       message: 'USER_ADDRESS_NOT_FOUND',
+    //     };
+    //   }
+    // }
 
     return validation;
   }
