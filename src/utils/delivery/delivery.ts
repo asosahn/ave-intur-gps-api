@@ -19,7 +19,7 @@ export const deliveryCourier = async (body: any, options = {}) => {
   }
 };
 
-export const sendOrdersToCourier = async (body: any, options = {}) => {
+export const sendOrdersToCourier = async (body: any[], options = {}) => {
   try {
     const { data } = await axios.post(SEND_ORDERS_TO_COURIER_URL, body, {
       headers: {

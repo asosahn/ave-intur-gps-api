@@ -118,7 +118,7 @@ export class OrderController {
 
   @Post('sendToCourier')
   async sendOrdersToCourier(
-    @Body() sendOrderToCourierDto: SendOrderToCourierDto[],
+    @Body() sendOrderToCourierDto: SendOrderToCourierDto,
   ): Promise<any> {
     return await this.orderService.sendOrdersToCourier(sendOrderToCourierDto);
   }

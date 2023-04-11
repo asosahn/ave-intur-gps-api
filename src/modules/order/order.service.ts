@@ -4,11 +4,11 @@ import { OrderErrors, OrderErrorCodes } from '@albatrosdeveloper/ave-models-npm/
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 import { isEmpty, pick, size } from 'lodash';
-import { LeanDocument } from 'mongoose';
-import { andAllWhere, buildQuery, CombinedFilter, Normalizers, Ops, seed, where } from '@albatrosdeveloper/ave-utils-npm/lib/utils/query.util';
-import { DocumentWithCountInterface } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/interfaces/interfaces';
+import { LeanDocument, Types } from 'mongoose';
+import { andAllWhere, buildQuery, CombinedFilter, Normalizers, Ops, seed, select, where } from '@albatrosdeveloper/ave-utils-npm/lib/utils/query.util';
+import { DocumentWithCountInterface, PatchBulkInterface } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/interfaces/interfaces';
 import { catchError, firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
@@ -21,18 +21,18 @@ import {
 } from '@albatrosdeveloper/ave-models-npm/lib/schemas/businessPartner/businessPartner.errors';
 import WarehouseAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.entity';
 import { WarehouseErrors, WarehouseErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/warehouse/warehouse.errors';
-import { OrderDetailTemporalService } from '../order-detail-temporal/order-detail-temporal.service';
 import { OrderDetailService } from '../order-detail/order-detail.service';
-import { OrderPayService } from '../order-pay/order-pay.service';
-import { OrderLogService } from '../order-log/order-log.service';
 import { ConfigService } from '@nestjs/config';
 import UserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.entity';
 import SuperUserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/superUser/superUser.entity';
 import { UserErrorCodes, UserErrors } from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.errors';
 import * as PromiseB from 'bluebird';
 import { OrderServiceUtil } from '../../utils/order/orderUtil.service';
-import { ValidationTypeEnum } from '../../utils/orderType/orderType';
+import { OrderCodeTypeEnum, ValidationTypeEnum } from '../../utils/orderType/orderType';
 import { SendOrderToCourierDto } from './dto/send-to-courier.dto';
+import { sendOrdersToCourier } from 'src/utils/delivery/delivery';
+import { Packaging } from '@albatrosdeveloper/ave-models-npm/lib/schemas/packaging/packaging.entity';
+import { updateBulkActions } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/enums/enums';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const cleanDeep = require('clean-deep');
 
@@ -47,10 +47,7 @@ export class OrderService {
     @InjectModel(Order.name)
     private readonly orderModel: OrderModelExt<OrderDocument>,
     private readonly httpService: HttpService,
-    private orderDetailTemporalService: OrderDetailTemporalService,
     private orderDetailService: OrderDetailService,
-    private orderPayService: OrderPayService,
-    private orderLogService: OrderLogService,
     private configService: ConfigService,
   ) {}
 
@@ -420,7 +417,131 @@ export class OrderService {
     }
   }
 
-  async sendOrdersToCourier(sendOrderToCourierDto: SendOrderToCourierDto[]): Promise<any> {
+  async sendOrdersToCourier(sendOrderToCourierDto: SendOrderToCourierDto): Promise<any> {
+    let orders: OrderAttributes[] = []
+    const prepareQueryOrders = buildQuery<OrderAttributes>(
+      where('_id', Ops.in(...sendOrderToCourierDto.orderIds, Normalizers.ObjectId)),
+      select(['_id', 'code', 'status', 'user', 'userAddress', 'orderType', 'warehouse', 'orderDetails', 'courier']),
+    );
 
+    orders = await this.findAll(prepareQueryOrders)
+
+    // Valida uno a uno que los pedidos existan
+    for (const id of sendOrderToCourierDto.orderIds) {
+      if (!orders.some(o => String(o._id) == id))
+        throw {
+          message: OrderErrors.ORDER_NOT_FOUND,
+          errorCode: OrderErrorCodes.ORDER_NOT_FOUND,
+        }
+    }
+
+    // Validación de status
+    // Aqui sólo se debería validar el primero
+    for (const order of orders) {
+      if (order.status < 4)
+        throw {
+          message: "El pedido aùn no ha sido pagado",
+        }
+      if (order.status == 6)
+        throw {
+          message: "El pedido ya fue asignado a un curier",
+        }
+    }
+
+    let body = []
+    let orderPosition = 1
+    for (const order of orders) {
+      if(order.orderType.code == OrderCodeTypeEnum.DELIVERY) {
+        let packaging: Packaging[] = []
+        for (const orderDetail of order.orderDetails) {
+          packaging.push(orderDetail.item.packaging)
+        }
+
+        body.push({
+          id: orderPosition,
+          orderCode: order?.code,
+          origin: {
+            country: order?.warehouse?.address?.country,
+            locationOne: order?.warehouse?.address?.locationOne,
+            locationTwo: order.warehouse?.address?.locationTwo,
+            locationThree: order.warehouse?.address?.locationThree,
+            address: order.warehouse?.address?.address,
+            reference: order?.warehouse?.address?.reference,
+            latitude: order?.warehouse?.address?.latitude,
+            longitude: order?.warehouse?.address?.longitud,
+          },
+          destiny: {
+            country: order?.userAddress?.country,
+            locationOne: order?.userAddress?.locationOne,
+            locationTwo: order?.userAddress?.locationTwo,
+            locationThree: order?.userAddress?.locationThree,
+            address: order?.userAddress?.address,
+            reference: order?.userAddress?.reference,
+            latitude: order?.userAddress?.latitude,
+            longitude: order?.userAddress?.longitud,
+            customer:{
+              email: order?.user.userLogin.email,
+              name: order?.user.userLogin.firstName + ' ' + order?.user.userLogin.lastName,
+              phone: order?.user.userLogin.phoneNumber,
+            }
+          },
+          packaging: packaging,
+          courier: {
+            id: order?.courier.id,
+       	    name: order?.courier.name,
+    	      price: order?.deliveryPrice,
+          }
+        })
+      }
+      orderPosition++
+    }
+
+    if(body.length > 0) {
+      const responseCourier = await sendOrdersToCourier(body)
+      let dataToUpdate: OrderAttributes[] = []
+      if(responseCourier.response == 'success') {
+        for (const guia of responseCourier.data.guias) {
+          const orderFound = orders.find(o => o.code == guia.orden)
+
+          if(orderFound)
+            dataToUpdate.push({
+              ...orderFound,
+              courierData: JSON.stringify({
+                recolecta: responseCourier.data.recolecta,
+                ...guia
+              })
+            })
+        }
+      } else {
+        throw {
+          message: "Error enviando el pedido al courier",
+        }
+      }
+
+      if(dataToUpdate.length > 0)
+        await this.updateStatusAndCourier(dataToUpdate)
+    } else {
+      throw {
+        message: "Sin pedidos par enviar al courier",
+      }
+    }
+    
+    return { 
+      response: 'success'
+    }
+  }
+
+  async updateStatusAndCourier(data: OrderAttributes[]): Promise<any> {
+    const createUpdateOrdersBulk: PatchBulkInterface[] = data.map(
+      (order) => ({
+        action: updateBulkActions.arrayFilters,
+        filters: { _id: order._id },
+        fields: {
+          status: 6, // Enviado a courier
+          courierData: order.courierData,
+        },
+      }),
+    );
+    return this.orderModel.patchDocumentsBulk(createUpdateOrdersBulk);
   }
 }
