@@ -542,6 +542,6 @@ export class OrderService {
         },
       }),
     );
-    return this.orderModel.patchDocumentsBulk(createUpdateOrdersBulk);
+    return await this.orderModel.patchDocumentsBulk(createUpdateOrdersBulk);
   }
 }
