@@ -514,7 +514,7 @@ export class OrderService {
         }
       } else {
         throw {
-          message: "Error enviando el pedido al courier",
+          message: "Error enviando el pedido al curier",
         }
       }
 
@@ -522,7 +522,7 @@ export class OrderService {
         await this.updateStatusAndCourier(dataToUpdate)
     } else {
       throw {
-        message: "Sin pedidos par enviar al courier",
+        message: "Sin pedidos par enviar al curier",
       }
     }
     
