@@ -4,7 +4,7 @@ import { OrderErrors, OrderErrorCodes } from '@albatrosdeveloper/ave-models-npm/
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
 import { isEmpty, pick, size } from 'lodash';
 import { LeanDocument } from 'mongoose';
 import { andAllWhere, buildQuery, CombinedFilter, Normalizers, Ops, seed, where } from '@albatrosdeveloper/ave-utils-npm/lib/utils/query.util';
@@ -81,6 +81,7 @@ export class OrderService {
       user: Partial<UserAttributes> | Partial<SuperUserAttributes>;
       token?: string;
     },
+    parentCode: string
   ) {
     const userPayload = createOrderDto.user || user;
     const userPromise = this.httpServiceGet<UserAttributes>(`${this.configService.get('API_CLIENT_URL')}/user/byId/${userPayload._id}`, undefined, {
@@ -126,6 +127,7 @@ export class OrderService {
     const date = new Date(createOrderDto.deliveryDate);
     const newOrder = new this.orderModel({
       code: createOrderDto.code,
+      parentCode: parentCode,
       user: userData,
       userAddress: createOrderDto.userAddress,
       total: createOrderDto.total,
@@ -155,6 +157,11 @@ export class OrderService {
       newOrder.orderDetails = orderDetails;
     }
     const orderNew = await this.orderModel.createGenId(newOrder);
+    if(!orderNew.parentCode) {
+      await this.update(orderNew._id, { parentCode: orderNew.code })
+      orderNew.parentCode = orderNew.code
+    }
+
     return orderNew;
   }
 
@@ -175,11 +182,17 @@ export class OrderService {
       if (findErrors) {
         return validateOrder;
       }
+
+      let parentCode: string = null
       for (const orderAttribute of createOrderDto) {
         const orderNew = await this.createOrder(orderAttribute, {
           user,
           token,
-        });
+        }, parentCode);
+
+        if(!parentCode)
+          parentCode = orderNew.parentCode
+        
         const result = {
           id: orderAttribute.id,
           error: false,
@@ -188,6 +201,7 @@ export class OrderService {
           orderDetaills: orderNew.orderDetaills,
           orderId: orderNew._id.toString(),
           orderCode: orderNew.code,
+          parentCode: parentCode,
         };
         results.push(result);
       }
@@ -373,6 +387,27 @@ export class OrderService {
         .lean()
         .exec();
       return orderDelete;
+    } catch (err) {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          error: !isEmpty(err) ? err : err.message,
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+  }
+
+  /**
+   * Guarda el sessionId de los pedidos que tengan un parentCode especìfico
+   * @param updatePaymentSessionIdDto
+   */
+  async updatePaymentSessionId(updatePaymentSessionIdDto: UpdatePaymentSessionIdDto): Promise<any> {
+    try {
+      return await this.orderModel.updateMany(
+        { 'parentCode': updatePaymentSessionIdDto.parentCode },
+        { $set: { 'paymentSessionId': updatePaymentSessionIdDto.paymentSessionId } },
+      );
     } catch (err) {
       throw new HttpException(
         {

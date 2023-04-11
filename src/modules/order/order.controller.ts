@@ -16,7 +16,7 @@ import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LeanDocument } from 'mongoose';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
 import { get } from 'lodash';
 
 @ApiTags('order')
@@ -106,5 +106,12 @@ export class OrderController {
     @Query('filter', new filterQueryPipe()) filter: Record<string, any>,
   ): Promise<number> {
     return await this.orderService.findAllCount(filter);
+  }
+
+  @Patch('paymentSessionId')
+  async updatePaymentSessionId(
+    @Body() updatePaymentSessionIdDto: UpdatePaymentSessionIdDto,
+  ): Promise<any> {
+    return await this.orderService.updatePaymentSessionId(updatePaymentSessionIdDto);
   }
 }
