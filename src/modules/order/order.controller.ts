@@ -18,6 +18,7 @@ import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
 import { get } from 'lodash';
+import { SendOrderToCourierDto } from './dto/send-to-courier.dto';
 
 @ApiTags('order')
 @Controller('order')
@@ -108,10 +109,17 @@ export class OrderController {
     return await this.orderService.findAllCount(filter);
   }
 
-  @Patch('paymentSessionId')
+  @Post('paymentSessionId')
   async updatePaymentSessionId(
     @Body() updatePaymentSessionIdDto: UpdatePaymentSessionIdDto,
   ): Promise<any> {
     return await this.orderService.updatePaymentSessionId(updatePaymentSessionIdDto);
+  }
+
+  @Post('sendToCourier')
+  async sendOrdersToCourier(
+    @Body() sendOrderToCourierDto: SendOrderToCourierDto[],
+  ): Promise<any> {
+    return await this.orderService.sendOrdersToCourier(sendOrderToCourierDto);
   }
 }

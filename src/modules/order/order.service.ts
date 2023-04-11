@@ -32,6 +32,7 @@ import { UserErrorCodes, UserErrors } from '@albatrosdeveloper/ave-models-npm/li
 import * as PromiseB from 'bluebird';
 import { OrderServiceUtil } from '../../utils/order/orderUtil.service';
 import { ValidationTypeEnum } from '../../utils/orderType/orderType';
+import { SendOrderToCourierDto } from './dto/send-to-courier.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const cleanDeep = require('clean-deep');
 
@@ -402,11 +403,11 @@ export class OrderService {
    * Guarda el sessionId de los pedidos que tengan un parentCode especìfico
    * @param updatePaymentSessionIdDto
    */
-  async updatePaymentSessionId(updatePaymentSessionIdDto: UpdatePaymentSessionIdDto): Promise<any> {
+  async updatePaymentSessionId(updatePaymentSessionIdDto: any): Promise<any> {
     try {
       return await this.orderModel.updateMany(
         { 'parentCode': updatePaymentSessionIdDto.parentCode },
-        { $set: { 'paymentSessionId': updatePaymentSessionIdDto.paymentSessionId } },
+        { $set: { paymentSessionId: updatePaymentSessionIdDto.paymentSessionId } },
       );
     } catch (err) {
       throw new HttpException(
@@ -417,5 +418,9 @@ export class OrderService {
         HttpStatus.FORBIDDEN,
       );
     }
+  }
+
+  async sendOrdersToCourier(sendOrderToCourierDto: SendOrderToCourierDto[]): Promise<any> {
+
   }
 }
