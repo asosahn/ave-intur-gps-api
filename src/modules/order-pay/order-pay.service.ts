@@ -98,7 +98,6 @@ export class OrderPayService {
       orderPayCreate.operationNumber = createOrderPayDto.operationNumber
       orderPayCreate.document = createOrderPayDto.document
       orderPayCreate.commentError = createOrderPayDto.commentError
-      orderPayCreate.typeCard = typeCard
       orderPayCreate.active = createOrderPayDto.active
 
       return orderPayCreate;
