@@ -43,7 +43,7 @@ export class OrderServiceUtil {
     if (!warehouse) {
       validation = {
         error: true,
-        message: 'invalid warehouse location',
+        message: 'Ubicación de sucursal no válida',
         errorCode: 'INVALID_WAREHOUSE_LOCATION',
       };
     }
@@ -51,7 +51,7 @@ export class OrderServiceUtil {
     if (!warehouseLocation) {
       validation = {
         error: true,
-        message: 'invalid warehouse location',
+        message: 'Ubicación de sucursal no válida',
         errorCode: 'INVALID_WAREHOUSE_LOCATION',
       };
     }
@@ -59,7 +59,7 @@ export class OrderServiceUtil {
     if (warehouseLocation !== orderLocation) {
       validation = {
         error: true,
-        message: 'invalid warehouse location',
+        message: 'Ubicación de sucursal no válida',
         errorCode: 'INVALID_WAREHOUSE_LOCATION',
       };
     }
@@ -76,7 +76,7 @@ export class OrderServiceUtil {
     if (!warehouse) {
       return {
         error: true,
-        message: 'not warehouse found',
+        message: 'Sucursal no encontrada',
         errorCode: 'NOT_WAREHOUSE_FOUND',
       };
     }
@@ -84,7 +84,7 @@ export class OrderServiceUtil {
     if (size(warehouseSchedule) <= 0) {
       return {
         error: true,
-        message: 'not schedule for today',
+        message: 'Fuera del horario de atención',
         errorCode: 'NOT_SCHEDULE_FOR_TODAY',
       };
     }
@@ -94,7 +94,7 @@ export class OrderServiceUtil {
     if (!getSchedule) {
       validation = {
         error: true,
-        message: 'not schedule for today',
+        message: 'Fuera del horario de atención',
         errorCode: 'NOT_SCHEDULE_FOR_TODAY',
       };
     }
@@ -105,7 +105,7 @@ export class OrderServiceUtil {
     if (!isBetween) {
       validation = {
         error: true,
-        message: 'not schedule for today',
+        message: 'Fuera del horario de atención',
         errorCode: 'NOT_SCHEDULE_FOR_TODAY',
       };
     }
@@ -206,7 +206,7 @@ export class OrderServiceUtil {
     if (!get(order, 'warehouse._id')) {
       return {
         error: true,
-        message: 'not warehouse found',
+        message: 'Sucursal no encontrada',
         errorCode: 'NOT_WAREHOUSE_FOUND',
       };
     }
@@ -251,13 +251,13 @@ export class OrderServiceUtil {
       if (!itemFromStock) {
         validation = {
           error: true,
-          message: 'Item error found',
+          message: 'El producto ya no está disponible',
           errorCode: 'ITEM_ERROR_FOUND',
         };
         item.error = true;
         item.errors.push({
           error: true,
-          message: 'item not found',
+          message: 'El producto ya no está disponible',
           errorCode: 'ITEM_NOT_FOUND',
         });
         return;
@@ -271,12 +271,12 @@ export class OrderServiceUtil {
         item.error = true;
         validation = {
           error: true,
-          message: 'Item error found',
+          message: 'El producto ya no está disponible',
           errorCode: 'ITEM_ERROR_FOUND',
         };
         item.errors.push({
           error: true,
-          message: 'stock not available',
+          message: 'Sin stock',
           errorCode: 'STOCK_NOT_AVAILABLE',
         });
       }

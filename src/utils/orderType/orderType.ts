@@ -73,7 +73,7 @@ class DeliveryClass implements CheckOrderInterface {
       const courierFind = couriers.find((item) => item.id === courier.id);
       if (!courierFind) {
         couriersValidation = {
-          message: 'Courier not available',
+          message: 'Courier no disponible',
           errorCode: 'COURIER_NOT_AVAILABLE',
         };
       }
@@ -81,7 +81,7 @@ class DeliveryClass implements CheckOrderInterface {
       if (size(couriers) <= 0 && !isEmpty(this.order.userAddress)) {
         couriersValidation = {
           message: 'No couriers available',
-          errorCode: 'NO_COURIERS_AVAILABLE',
+          errorCode: 'No hay couriers disponibles',
         };
       }
     }

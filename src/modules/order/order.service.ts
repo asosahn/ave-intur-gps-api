@@ -440,11 +440,11 @@ export class OrderService {
     for (const order of orders) {
       if (order.status < 4)
         throw {
-          message: "El pedido aùn no ha sido pagado",
+          message: "El pedido aún no ha sido pagado",
         }
       if (order.status == 6)
         throw {
-          message: "El pedido ya fue asignado a un curier",
+          message: "El pedido ya ha sido asignado a un courier",
         }
     }
 
@@ -514,7 +514,7 @@ export class OrderService {
         }
       } else {
         throw {
-          message: "Error enviando el pedido al curier",
+          message: "Error al enviar el pedido al courier",
         }
       }
 
@@ -522,7 +522,7 @@ export class OrderService {
         await this.updateStatusAndCourier(dataToUpdate)
     } else {
       throw {
-        message: "Sin pedidos par enviar al curier",
+        message: "No hay pedidos para enviar al courier",
       }
     }
     
