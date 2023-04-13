@@ -5,9 +5,18 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { isEmpty, pick, size } from 'lodash';
-import { LeanDocument, Types } from 'mongoose';
-import { andAllWhere, buildQuery, CombinedFilter, Normalizers, Ops, seed, select, where } from '@albatrosdeveloper/ave-utils-npm/lib/utils/query.util';
+import { get, isEmpty, pick, size } from 'lodash';
+import { LeanDocument } from 'mongoose';
+import {
+  andAllWhere,
+  buildQuery,
+  CombinedFilter,
+  Normalizers,
+  Ops,
+  seed,
+  select,
+  where,
+} from '@albatrosdeveloper/ave-utils-npm/lib/utils/query.util';
 import { DocumentWithCountInterface, PatchBulkInterface } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/interfaces/interfaces';
 import { catchError, firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -79,7 +88,7 @@ export class OrderService {
       user: Partial<UserAttributes> | Partial<SuperUserAttributes>;
       token?: string;
     },
-    parentCode: string
+    parentCode: string,
   ) {
     const userPayload = createOrderDto.user || user;
     const userPromise = this.httpServiceGet<UserAttributes>(`${this.configService.get('API_CLIENT_URL')}/user/byId/${userPayload._id}`, undefined, {
@@ -155,9 +164,9 @@ export class OrderService {
       newOrder.orderDetails = orderDetails;
     }
     const orderNew = await this.orderModel.createGenId(newOrder);
-    if(!orderNew.parentCode) {
-      await this.update(orderNew._id, { parentCode: orderNew.code })
-      orderNew.parentCode = orderNew.code
+    if (!orderNew.parentCode) {
+      await this.update(orderNew._id, { parentCode: orderNew.code });
+      orderNew.parentCode = orderNew.code;
     }
 
     return orderNew;
@@ -181,16 +190,19 @@ export class OrderService {
         return validateOrder;
       }
 
-      let parentCode: string = null
+      let parentCode: string = null;
       for (const orderAttribute of createOrderDto) {
-        const orderNew = await this.createOrder(orderAttribute, {
-          user,
-          token,
-        }, parentCode);
+        const orderNew = await this.createOrder(
+          orderAttribute,
+          {
+            user,
+            token,
+          },
+          parentCode,
+        );
 
-        if(!parentCode)
-          parentCode = orderNew.parentCode
-        
+        if (!parentCode) parentCode = orderNew.parentCode;
+
         const result = {
           id: orderAttribute.id,
           error: false,
@@ -205,13 +217,15 @@ export class OrderService {
       }
       return results;
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -266,13 +280,15 @@ export class OrderService {
       );
       return ordersValidated;
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -281,13 +297,15 @@ export class OrderService {
       const prepareQuery = buildQuery(seed(filter as CombinedFilter<OrderAttributes>), andAllWhere('_deleted', false));
       return this.orderModel.getDocuments(prepareQuery);
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -296,13 +314,15 @@ export class OrderService {
       const prepareQuery = buildQuery(seed(filter as CombinedFilter<OrderAttributes>), andAllWhere('_deleted', false));
       return this.orderModel.getDocumentsWithCount(prepareQuery);
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -311,13 +331,15 @@ export class OrderService {
       const prepareQuery = buildQuery(seed(filter as CombinedFilter<OrderAttributes>), andAllWhere('_deleted', false));
       return this.orderModel.count(prepareQuery);
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -326,13 +348,15 @@ export class OrderService {
       const prepareQuery = buildQuery<OrderAttributes>(where('_id', Ops.eq(id, Normalizers.ObjectId)), andAllWhere('_deleted', false));
       return this.orderModel.getDocument(prepareQuery);
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -358,13 +382,15 @@ export class OrderService {
       const orderUpdated = await this.orderModel.findByIdAndUpdate({ _id: id }, { $set: updateOrderDto }, { new: true }).lean().exec();
       return orderUpdated;
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -386,13 +412,15 @@ export class OrderService {
         .exec();
       return orderDelete;
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
@@ -403,36 +431,38 @@ export class OrderService {
   async updatePaymentSessionId(updatePaymentSessionIdDto: any): Promise<any> {
     try {
       return await this.orderModel.updateMany(
-        { 'parentCode': updatePaymentSessionIdDto.parentCode },
+        { parentCode: updatePaymentSessionIdDto.parentCode },
         { $set: { paymentSessionId: updatePaymentSessionIdDto.paymentSessionId } },
       );
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 
   async sendOrdersToCourier(sendOrderToCourierDto: SendOrderToCourierDto): Promise<any> {
-    let orders: OrderAttributes[] = []
+    let orders: OrderAttributes[] = [];
     const prepareQueryOrders = buildQuery<OrderAttributes>(
       where('_id', Ops.in(...sendOrderToCourierDto.orderIds, Normalizers.ObjectId)),
       select(['_id', 'code', 'status', 'user', 'userAddress', 'orderType', 'warehouse', 'orderDetails', 'courier']),
     );
 
-    orders = await this.findAll(prepareQueryOrders)
+    orders = await this.findAll(prepareQueryOrders);
 
     // Valida uno a uno que los pedidos existan
     for (const id of sendOrderToCourierDto.orderIds) {
-      if (!orders.some(o => String(o._id) == id))
+      if (!orders.some((o) => String(o._id) == id))
         throw {
           message: OrderErrors.ORDER_NOT_FOUND,
           errorCode: OrderErrorCodes.ORDER_NOT_FOUND,
-        }
+        };
     }
 
     // Validación de status
@@ -440,21 +470,21 @@ export class OrderService {
     for (const order of orders) {
       if (order.status < 4)
         throw {
-          message: "El pedido aún no ha sido pagado",
-        }
+          message: 'El pedido aún no ha sido pagado',
+        };
       if (order.status == 6)
         throw {
-          message: "El pedido ya ha sido asignado a un courier",
-        }
+          message: 'El pedido ya ha sido asignado a un courier',
+        };
     }
 
-    let body = []
-    let orderPosition = 1
+    const body = [];
+    let orderPosition = 1;
     for (const order of orders) {
-      if(order.orderType.code == OrderCodeTypeEnum.DELIVERY) {
-        let packaging: Packaging[] = []
+      if (order.orderType.code == OrderCodeTypeEnum.DELIVERY) {
+        const packaging: Packaging[] = [];
         for (const orderDetail of order.orderDetails) {
-          packaging.push(orderDetail.item.packaging)
+          packaging.push(orderDetail.item.packaging);
         }
 
         body.push({
@@ -479,69 +509,66 @@ export class OrderService {
             reference: order?.userAddress?.reference,
             latitude: order?.userAddress?.latitude,
             longitude: order?.userAddress?.longitud,
-            customer:{
+            customer: {
               email: order?.user.userLogin.email,
               name: order?.user.userLogin.firstName + ' ' + order?.user.userLogin.lastName,
               phone: order?.user.userLogin.phoneNumber,
-            }
+            },
           },
           packaging: packaging,
           courier: {
             id: order?.courier.id,
-       	    name: order?.courier.name,
-    	      price: order?.deliveryPrice,
-          }
-        })
+            name: order?.courier.name,
+            price: order?.deliveryPrice,
+          },
+        });
       }
-      orderPosition++
+      orderPosition++;
     }
 
-    if(body.length > 0) {
-      const responseCourier = await sendOrdersToCourier(body)
-      let dataToUpdate: OrderAttributes[] = []
-      if(responseCourier.response == 'success') {
+    if (body.length > 0) {
+      const responseCourier = await sendOrdersToCourier(body);
+      const dataToUpdate: OrderAttributes[] = [];
+      if (responseCourier.response == 'success') {
         for (const guia of responseCourier.data.guias) {
-          const orderFound = orders.find(o => o.code == guia.orden)
+          const orderFound = orders.find((o) => o.code == guia.orden);
 
-          if(orderFound)
+          if (orderFound)
             dataToUpdate.push({
               ...orderFound,
               courierData: JSON.stringify({
                 recolecta: responseCourier.data.recolecta,
-                ...guia
-              })
-            })
+                ...guia,
+              }),
+            });
         }
       } else {
         throw {
-          message: "Error al enviar el pedido al courier",
-        }
+          message: 'Error al enviar el pedido al courier',
+        };
       }
 
-      if(dataToUpdate.length > 0)
-        await this.updateStatusAndCourier(dataToUpdate)
+      if (dataToUpdate.length > 0) await this.updateStatusAndCourier(dataToUpdate);
     } else {
       throw {
-        message: "No hay pedidos para enviar al courier",
-      }
+        message: 'No hay pedidos para enviar al courier',
+      };
     }
-    
-    return { 
-      response: 'success'
-    }
+
+    return {
+      response: 'success',
+    };
   }
 
   async updateStatusAndCourier(data: OrderAttributes[]): Promise<any> {
-    const createUpdateOrdersBulk: PatchBulkInterface[] = data.map(
-      (order) => ({
-        action: updateBulkActions.arrayFilters,
-        filters: { _id: order._id },
-        fields: {
-          status: 6, // Enviado a courier
-          courierData: order.courierData,
-        },
-      }),
-    );
+    const createUpdateOrdersBulk: PatchBulkInterface[] = data.map((order) => ({
+      action: updateBulkActions.arrayFilters,
+      filters: { _id: order._id },
+      fields: {
+        status: 6, // Enviado a courier
+        courierData: order.courierData,
+      },
+    }));
     return await this.orderModel.patchDocumentsBulk(createUpdateOrdersBulk);
   }
 }

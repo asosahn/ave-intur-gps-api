@@ -1,7 +1,7 @@
 import OrderDetailTemporalAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetailTemporal/orderDetailTemporal.entity';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateOrderDetailTemporalDto } from './dto/create-order-detail-temporal.dto';
-import { isEmpty } from 'lodash';
+import { get, isEmpty } from 'lodash';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
@@ -13,13 +13,9 @@ import { AttributeErrors, AttributeErrorCodes } from '@albatrosdeveloper/ave-mod
 @Injectable()
 export class OrderDetailTemporalService {
   private readonly logger = new Logger(OrderDetailTemporalService.name);
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
-  async httpServiceGet<T>(
-    api: string,
-    filter: any,
-    errorType: object,
-  ): Promise<T> {
+  async httpServiceGet<T>(api: string, filter: any, errorType: object): Promise<T> {
     const { data } = await firstValueFrom(
       this.httpService
         .get<T>(api, {
@@ -35,9 +31,7 @@ export class OrderDetailTemporalService {
     return data;
   }
 
-  async create(
-    createOrderDetailTemporalDto: CreateOrderDetailTemporalDto,
-  ): Promise<OrderDetailTemporalAttributes> {
+  async create(createOrderDetailTemporalDto: CreateOrderDetailTemporalDto): Promise<OrderDetailTemporalAttributes> {
     try {
       const item = await this.httpServiceGet<ItemAttributes>(
         `${process.env.API_ITEM_URL}/item/byId/${createOrderDetailTemporalDto.itemId}`,
@@ -56,26 +50,28 @@ export class OrderDetailTemporalService {
         },
       );
 
-      const attributeItem = new AttributeItemAttributes()
-      attributeItem.attribute = attribute
-      attributeItem.value = createOrderDetailTemporalDto.attributeItem.value
+      const attributeItem = new AttributeItemAttributes();
+      attributeItem.attribute = attribute;
+      attributeItem.value = createOrderDetailTemporalDto.attributeItem.value;
 
       const orderDetaillTemporalCreate = new OrderDetailTemporalAttributes();
-      orderDetaillTemporalCreate.item = item
-      orderDetaillTemporalCreate.attributeItem = attributeItem
-      orderDetaillTemporalCreate.quantity = createOrderDetailTemporalDto.quantity
-      orderDetaillTemporalCreate.status = createOrderDetailTemporalDto.status
-      orderDetaillTemporalCreate.active = createOrderDetailTemporalDto.active
+      orderDetaillTemporalCreate.item = item;
+      orderDetaillTemporalCreate.attributeItem = attributeItem;
+      orderDetaillTemporalCreate.quantity = createOrderDetailTemporalDto.quantity;
+      orderDetaillTemporalCreate.status = createOrderDetailTemporalDto.status;
+      orderDetaillTemporalCreate.active = createOrderDetailTemporalDto.active;
 
       return orderDetaillTemporalCreate;
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 }

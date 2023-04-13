@@ -1,15 +1,12 @@
 import OrderDetailAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderDetail/orderDetail.entity';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { CreateOrderDetaillDto } from './dto/create-order-detail.dto';
-import { isEmpty } from 'lodash';
+import { get, isEmpty } from 'lodash';
 import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 import ItemAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.entity';
-import {
-  ItemErrors,
-  ItemErrorCodes,
-} from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.errors';
+import { ItemErrors, ItemErrorCodes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.errors';
 import { Types } from 'mongoose';
 
 @Injectable()
@@ -17,11 +14,7 @@ export class OrderDetailService {
   private readonly logger = new Logger(OrderDetailService.name);
   constructor(private readonly httpService: HttpService) {}
 
-  async httpServiceGet<T>(
-    api: string,
-    filter: any,
-    errorType: object,
-  ): Promise<T> {
+  async httpServiceGet<T>(api: string, filter: any, errorType: object): Promise<T> {
     const { data } = await firstValueFrom(
       this.httpService
         .get<T>(api, {
@@ -37,15 +30,10 @@ export class OrderDetailService {
     return data;
   }
 
-  async create(
-    createOrderDetailDto: CreateOrderDetaillDto,
-  ): Promise<OrderDetailAttributes> {
+  async create(createOrderDetailDto: CreateOrderDetaillDto): Promise<OrderDetailAttributes> {
     try {
       const item = await this.httpServiceGet<ItemAttributes>(
-        `${process.env.API_ITEM_URL}/item/byId/${
-          createOrderDetailDto.item._id.toString() ||
-          createOrderDetailDto.itemId
-        }`,
+        `${process.env.API_ITEM_URL}/item/byId/${createOrderDetailDto.item._id.toString() || createOrderDetailDto.itemId}`,
         undefined,
         {
           message: ItemErrors.ITEM_NOT_FOUND,
@@ -68,13 +56,15 @@ export class OrderDetailService {
       orderDetailCreate._id = new Types.ObjectId();
       return orderDetailCreate;
     } catch (err) {
-      throw new HttpException(
-        {
-          status: HttpStatus.FORBIDDEN,
-          error: !isEmpty(err) ? err : err.message,
-        },
-        HttpStatus.FORBIDDEN,
-      );
+      throw get(err, 'status')
+        ? err
+        : new HttpException(
+            {
+              status: HttpStatus.FORBIDDEN,
+              error: !isEmpty(err) ? err : err.message,
+            },
+            HttpStatus.FORBIDDEN,
+          );
     }
   }
 }
