@@ -4,7 +4,7 @@ import { OrderErrors, OrderErrorCodes } from '@albatrosdeveloper/ave-models-npm/
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
 import { get, isEmpty, pick, size } from 'lodash';
 import { LeanDocument } from 'mongoose';
 import {
@@ -40,9 +40,9 @@ import { OrderServiceUtil } from '../../utils/order/orderUtil.service';
 import { OrderCodeTypeEnum, ValidationTypeEnum } from '../../utils/orderType/orderType';
 import { SendOrderToCourierDto } from './dto/send-to-courier.dto';
 import { sendOrdersToCourier } from 'src/utils/delivery/delivery';
-import { Packaging } from '@albatrosdeveloper/ave-models-npm/lib/schemas/packaging/packaging.entity';
 import { updateBulkActions } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/enums/enums';
 import { UpdateStatusCourierDto } from './dto/update-status-courier.dto';
+import { AttributeItemAttributes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.entity';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const cleanDeep = require('clean-deep');
 
@@ -435,11 +435,22 @@ export class OrderService {
    * Guarda el sessionId de los pedidos que tengan un parentCode especìfico
    * @param updatePaymentSessionIdDto
    */
-  async updatePaymentSessionId(updatePaymentSessionIdDto: any): Promise<any> {
+  async updatePaymentSessionId(updatePaymentSessionIdDto: UpdatePaymentSessionIdDto): Promise<any> {
     try {
+      const flagRTN = updatePaymentSessionIdDto.flagRTN == true
+      let dataToUpdate: Partial<OrderAttributes> = {
+        paymentSessionId: updatePaymentSessionIdDto.paymentSessionId, 
+      }
+
+      if(flagRTN) {
+        dataToUpdate.flagRTN = flagRTN
+        dataToUpdate.businessName = updatePaymentSessionIdDto.businessName
+        dataToUpdate.RTN = updatePaymentSessionIdDto.RTN
+      }
+
       return await this.orderModel.updateMany(
         { parentCode: updatePaymentSessionIdDto.parentCode },
-        { $set: { paymentSessionId: updatePaymentSessionIdDto.paymentSessionId } },
+        { $set: dataToUpdate },
       );
     } catch (err) {
       throw get(err, 'status')
@@ -458,7 +469,7 @@ export class OrderService {
     let orders: OrderAttributes[] = [];
     const prepareQueryOrders = buildQuery<OrderAttributes>(
       where('_id', Ops.in(...sendOrderToCourierDto.orderIds, Normalizers.ObjectId)),
-      select(['_id', 'code', 'status', 'deliveryPrice', 'user', 'userAddress', 'orderType', 'warehouse', 'orderDetails', 'courier']),
+      select(['_id', 'code', 'status', 'deliveryPrice', 'user', 'userAddress', 'orderType', 'businessPartner', 'warehouse', 'orderDetails', 'courier']),
     );
 
     orders = await this.findAll(prepareQueryOrders);
@@ -493,9 +504,27 @@ export class OrderService {
     let orderPosition = 1;
     for (const order of orders) {
       if (order.orderType.code == OrderCodeTypeEnum.DELIVERY) {
-        const packaging: Packaging[] = [];
+        let orderDetails: any[] = [];
         for (const orderDetail of order.orderDetails) {
-          packaging.push(orderDetail.item.packaging);
+          let variantText = ""
+          if(orderDetail.variant && orderDetail.variant.atributes) {
+            const attributes: AttributeItemAttributes[] = orderDetail.variant.atributes
+
+            if(attributes.length > 0) 
+              for(const attribute of attributes) {
+                if(variantText != "")
+                  variantText = variantText + `, `
+                variantText = variantText + `${attribute.attribute.name}: ${attribute.value}`
+              }
+          }
+
+          orderDetails.push({
+            SKU: orderDetail.item.SKU,
+            name: orderDetail.item.name,
+            variant: variantText,
+            quantity: orderDetail.quantity,
+            packaging: orderDetail.item.packaging,
+          });
         }
 
         body.push({
@@ -510,6 +539,11 @@ export class OrderService {
             reference: order?.warehouse?.address?.reference,
             latitude: order?.warehouse?.address?.latitude,
             longitude: order?.warehouse?.address?.longitud,
+            business: {
+              email: order?.businessPartner?.emailOfficial,
+              name: order?.warehouse?.name,
+              phone: order?.warehouse?.phone,
+            },
           },
           destiny: {
             country: order?.userAddress?.country,
@@ -526,12 +560,12 @@ export class OrderService {
               phone: order?.user.userLogin.phoneNumber,
             },
           },
-          packaging: packaging,
           courier: {
             id: order?.courier.id,
             name: order?.courier.name,
             price: order?.deliveryPrice,
           },
+          detail: orderDetails,
         });
       }
       orderPosition++;
@@ -629,7 +663,7 @@ export class OrderService {
           const orderWithError = dataToUpdate.some(o => o.code == r.orderCode)
           if(orderWithError) {
             r.response = 'error'
-            r.errorMessage = 'No se actulizó el estado del pedido'
+            r.errorMessage = 'No se actualizó el estado del pedido'
           }
         })
       }
