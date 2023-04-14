@@ -42,6 +42,7 @@ import { SendOrderToCourierDto } from './dto/send-to-courier.dto';
 import { sendOrdersToCourier } from 'src/utils/delivery/delivery';
 import { Packaging } from '@albatrosdeveloper/ave-models-npm/lib/schemas/packaging/packaging.entity';
 import { updateBulkActions } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/enums/enums';
+import { UpdateStatusCourierDto } from './dto/update-status-courier.dto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const cleanDeep = require('clean-deep');
 
@@ -260,7 +261,7 @@ export class OrderService {
           // const validateLocationWarehouse = await this.orderServiceUtil.validateLocationWarehouse(order);
           const validateOrdersDetailsGeneral = await this.orderServiceUtil.validateStock(order);
           order.errors = cleanDeep([
-            ...(order.errors ?? []),
+            ...(/*order.errors ?? */[]),
             validationOrderType,
             validationWarehouse,
             // validateLocationWarehouse,
@@ -476,6 +477,10 @@ export class OrderService {
         throw {
           message: 'El pedido ya ha sido asignado a un courier',
         };
+      if (order.status == 7)
+        throw {
+          message: 'El pedido ya fue entregado',
+        };
     }
 
     const body = [];
@@ -564,9 +569,19 @@ export class OrderService {
       filters: { _id: order._id },
       fields: {
         status: 6, // Enviado a courier
+        subStatus: 1, // Pendiente
         courierData: order.courierData,
       },
     }));
     return await this.orderModel.patchDocumentsBulk(createUpdateOrdersBulk);
+  }
+
+  /**
+   * Actuaiza el subStatus del pedido
+   * Este servicio lo consume el servidor de courier
+   * @param updateStatusCourierDto
+   */
+  async updateStatusCourier(updateStatusCourierDto: UpdateStatusCourierDto[]) {
+
   }
 }
