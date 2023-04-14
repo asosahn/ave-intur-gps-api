@@ -8,7 +8,7 @@ import CheckOrderClass, {
 } from '../orderType/orderType';
 import { UserService } from '../user/user.service';
 import UserAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.entity';
-import { toString, get, toLower, size, isNil, isUndefined, first, deburr } from 'lodash';
+import { toString, get, toLower, size, first, deburr, has } from 'lodash';
 import { UserErrors } from '@albatrosdeveloper/ave-models-npm/lib/schemas/user/user.errors';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -91,7 +91,7 @@ export class OrderServiceUtil {
     const momentConfig = dateTime ? moment(dateTime).tz('America/Tegucigalpa').locale('es') : moment().tz('America/Tegucigalpa').locale('es');
     const currentDayName = deburr(toLower(momentConfig.format('dddd')));
     const getSchedule = warehouseSchedule.find((scd) => toLower(scd.name) === currentDayName && scd.active === '1');
-    if (!getSchedule) {
+    if (!has(getSchedule, 'hourStart') || !has(getSchedule, 'hourEnd')) {
       validation = {
         error: true,
         message: 'Fuera del horario de atención',
