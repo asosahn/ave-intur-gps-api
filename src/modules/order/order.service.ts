@@ -451,7 +451,7 @@ export class OrderService {
     let orders: OrderAttributes[] = [];
     const prepareQueryOrders = buildQuery<OrderAttributes>(
       where('_id', Ops.in(...sendOrderToCourierDto.orderIds, Normalizers.ObjectId)),
-      select(['_id', 'code', 'status', 'user', 'userAddress', 'orderType', 'warehouse', 'orderDetails', 'courier']),
+      select(['_id', 'code', 'status', 'deliveryPrice', 'user', 'userAddress', 'orderType', 'warehouse', 'orderDetails', 'courier']),
     );
 
     orders = await this.findAll(prepareQueryOrders);
@@ -529,17 +529,14 @@ export class OrderService {
     if (body.length > 0) {
       const responseCourier = await sendOrdersToCourier(body);
       const dataToUpdate: OrderAttributes[] = [];
-      if (responseCourier.response == 'success') {
-        for (const guia of responseCourier.data.guias) {
-          const orderFound = orders.find((o) => o.code == guia.orden);
+      if (responseCourier && responseCourier.response != 'error') {
+        for (const orderCourier of responseCourier.data.filter(oc => oc.response == 'success')) {
+          const orderFound = orders.find((o) => o.code == orderCourier.orderCode);
 
           if (orderFound)
             dataToUpdate.push({
               ...orderFound,
-              courierData: JSON.stringify({
-                recolecta: responseCourier.data.recolecta,
-                ...guia,
-              }),
+              courierData: orderCourier.data,
             });
         }
       } else {
@@ -548,7 +545,8 @@ export class OrderService {
         };
       }
 
-      if (dataToUpdate.length > 0) await this.updateStatusAndCourier(dataToUpdate);
+      if (dataToUpdate.length > 0) 
+        await this.updateStatusAndCourier(dataToUpdate);
     } else {
       throw {
         message: 'No hay pedidos para enviar al courier',
