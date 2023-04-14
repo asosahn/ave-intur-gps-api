@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LeanDocument } from 'mongoose';
-import { OrderService } from './order.service';
+import { OrderResponseToCourier, OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
 import { get } from 'lodash';
@@ -127,7 +127,7 @@ export class OrderController {
   @Post('updateStatusCourier')
   async updateStatusCourier(
     @Body() updateStatusCourierDto: UpdateStatusCourierDto[],
-  ): Promise<any> {
+  ): Promise<OrderResponseToCourier[]> {
     return await this.orderService.updateStatusCourier(updateStatusCourierDto);
   }
 }

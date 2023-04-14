@@ -48,6 +48,12 @@ const cleanDeep = require('clean-deep');
 
 const RESPONSE_VALIDATE_ORDERS_FIELDS = ['errors', 'error', 'id', 'orderDetails', 'couriers'];
 
+export interface OrderResponseToCourier {
+  orderCode: string,
+  response: string,
+  errorMessage: string,
+}
+
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
@@ -541,6 +547,7 @@ export class OrderService {
           if (orderFound)
             dataToUpdate.push({
               ...orderFound,
+              subStatus: 1, // Pendiente
               courierData: orderCourier.data,
             });
         }
@@ -568,8 +575,8 @@ export class OrderService {
       action: updateBulkActions.arrayFilters,
       filters: { _id: order._id },
       fields: {
-        status: 6, // Enviado a courier
-        subStatus: 1, // Pendiente
+        status: order.subStatus != 4 ? 6 : 7, // 6: en delivery, 7: pedido entregado
+        subStatus: order.subStatus,
         courierData: order.courierData,
       },
     }));
@@ -581,7 +588,52 @@ export class OrderService {
    * Este servicio lo consume el servidor de courier
    * @param updateStatusCourierDto
    */
-  async updateStatusCourier(updateStatusCourierDto: UpdateStatusCourierDto[]) {
+  async updateStatusCourier(updateStatusCourierDto: UpdateStatusCourierDto[]): Promise<OrderResponseToCourier[]> {
+    let orders: OrderAttributes[] = [];
+    const prepareQueryOrders = buildQuery<OrderAttributes>(
+      where('code', Ops.in(...updateStatusCourierDto.map(o => o.orderCode))),
+      select(['_id', 'code', 'status', 'courierData']),
+    );
 
+    orders = await this.findAll(prepareQueryOrders);
+    const dataToUpdate: OrderAttributes[] = [];
+    let response: OrderResponseToCourier[] = []
+
+    // Valida uno a uno que los pedidos existan
+    for (const courierData of updateStatusCourierDto) {
+      let orderResponse = {
+        orderCode: courierData.orderCode,
+        response: 'success',
+        errorMessage: '',
+      }
+
+      const orderFound = orders.find((o) => o.code == courierData.orderCode);
+
+      if (orderFound) {
+        dataToUpdate.push({
+          ...orderFound,
+          subStatus: courierData.status,
+        });
+      } else {
+        orderResponse.response = 'error'
+        orderResponse.errorMessage = OrderErrors.ORDER_NOT_FOUND
+      }
+      response.push(orderResponse)
+    }
+
+    if (dataToUpdate.length > 0)
+      try {
+        await this.updateStatusAndCourier(dataToUpdate);
+      } catch (error) {
+        response.forEach(r => {
+          const orderWithError = dataToUpdate.some(o => o.code == r.orderCode)
+          if(orderWithError) {
+            r.response = 'error'
+            r.errorMessage = 'No se actulizó el estado del pedido'
+          }
+        })
+      }
+      
+    return response
   }
 }

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class UpdateStatusCourierDto {
@@ -16,4 +17,11 @@ export class UpdateStatusCourierDto {
     @IsNumber()
     @IsNotEmpty()
     status: number; // subStatus del pedido
+
+    @ApiProperty({
+      required: true,
+    })
+    @IsNotEmpty()
+    @Type(() => Date)
+    date: Date;
 }
