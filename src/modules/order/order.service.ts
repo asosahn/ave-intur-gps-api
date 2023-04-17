@@ -60,11 +60,13 @@ export class OrderService {
     private configService: ConfigService,
   ) {}
 
-  async httpServiceGet<T>(api: string, filter: any, errorType: object): Promise<T> {
-    const { data } = await firstValueFrom(
+  async httpServiceGet<T>(api: string, filtered: any, errorType: object): Promise<T> {
+    const { data }: any = await firstValueFrom(
       this.httpService
         .get<T>(api, {
-          params: filter,
+          params: {
+            filter: filtered,
+          },
         })
         .pipe(
           catchError((error: AxiosError) => {
@@ -72,6 +74,18 @@ export class OrderService {
             throw errorType;
           }),
         ),
+    );
+    return data;
+  }
+
+  async httpServicePut<T>(api: string, body: any, errorType: object): Promise<T> {
+    const { data }: any = await firstValueFrom(
+      this.httpService.put<T>(api, body).pipe(
+        catchError((error: AxiosError) => {
+          this.logger.error(error.response.data);
+          throw errorType;
+        }),
+      ),
     );
     return data;
   }
@@ -186,11 +200,12 @@ export class OrderService {
       const results = [];
       const validateOrder: Array<Record<string, any>> | any = await this.validateOrder(createOrderDto, { user, token }, ValidationTypeEnum.CREATE);
       const findErrors = validateOrder.some((order) => order.error);
-      if (findErrors) {
-        return validateOrder;
-      }
+      // if (findErrors) {
+      //   return validateOrder;
+      // }
 
       let parentCode: string = null;
+      const orderIds = [];
       for (const orderAttribute of createOrderDto) {
         const orderNew = await this.createOrder(
           orderAttribute,
@@ -200,9 +215,8 @@ export class OrderService {
           },
           parentCode,
         );
-
         if (!parentCode) parentCode = orderNew.parentCode;
-
+        orderIds.push(orderNew._id.toString());
         const result = {
           id: orderAttribute.id,
           error: false,
@@ -215,6 +229,10 @@ export class OrderService {
         };
         results.push(result);
       }
+      await this.httpServicePut(`${process.env.API_ITEM_URL}/item/discount-stock`, orderIds, {
+        message: OrderErrors.ORDER_NOT_FOUND,
+        errorCode: OrderErrorCodes.ORDER_NOT_FOUND,
+      });
       return results;
     } catch (err) {
       throw get(err, 'status')
