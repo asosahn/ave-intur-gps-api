@@ -14,11 +14,12 @@ import {
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { LeanDocument } from 'mongoose';
-import { OrderService } from './order.service';
+import { OrderResponseToCourier, OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
 import { get } from 'lodash';
 import { SendOrderToCourierDto } from './dto/send-to-courier.dto';
+import { UpdateStatusCourierDto } from './dto/update-status-courier.dto';
 
 @ApiTags('order')
 @Controller('order')
@@ -121,5 +122,12 @@ export class OrderController {
     @Body() sendOrderToCourierDto: SendOrderToCourierDto,
   ): Promise<any> {
     return await this.orderService.sendOrdersToCourier(sendOrderToCourierDto);
+  }
+
+  @Post('updateStatusCourier')
+  async updateStatusCourier(
+    @Body() updateStatusCourierDto: UpdateStatusCourierDto[],
+  ): Promise<OrderResponseToCourier[]> {
+    return await this.orderService.updateStatusCourier(updateStatusCourierDto);
   }
 }

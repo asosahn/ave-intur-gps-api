@@ -4,7 +4,7 @@ import { OrderErrors, OrderErrorCodes } from '@albatrosdeveloper/ave-models-npm/
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateOrderDto, UpdatePaymentSessionIdDto } from './dto/update-order.dto';
 import { get, isEmpty, pick, size } from 'lodash';
 import { LeanDocument } from 'mongoose';
 import {
@@ -40,12 +40,19 @@ import { OrderServiceUtil } from '../../utils/order/orderUtil.service';
 import { OrderCodeTypeEnum, ValidationTypeEnum } from '../../utils/orderType/orderType';
 import { SendOrderToCourierDto } from './dto/send-to-courier.dto';
 import { sendOrdersToCourier } from 'src/utils/delivery/delivery';
-import { Packaging } from '@albatrosdeveloper/ave-models-npm/lib/schemas/packaging/packaging.entity';
 import { updateBulkActions } from '@albatrosdeveloper/ave-models-npm/lib/methods/common/enums/enums';
+import { UpdateStatusCourierDto } from './dto/update-status-courier.dto';
+import { AttributeItemAttributes } from '@albatrosdeveloper/ave-models-npm/lib/schemas/item/item.entity';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const cleanDeep = require('clean-deep');
 
 const RESPONSE_VALIDATE_ORDERS_FIELDS = ['errors', 'error', 'id', 'orderDetails', 'couriers'];
+
+export interface OrderResponseToCourier {
+  orderCode: string,
+  response: string,
+  errorMessage: string,
+}
 
 @Injectable()
 export class OrderService {
@@ -278,7 +285,7 @@ export class OrderService {
           // const validateLocationWarehouse = await this.orderServiceUtil.validateLocationWarehouse(order);
           const validateOrdersDetailsGeneral = await this.orderServiceUtil.validateStock(order);
           order.errors = cleanDeep([
-            ...(order.errors ?? []),
+            ...(/*order.errors ?? */[]),
             validationOrderType,
             validationWarehouse,
             // validateLocationWarehouse,
@@ -446,11 +453,22 @@ export class OrderService {
    * Guarda el sessionId de los pedidos que tengan un parentCode especìfico
    * @param updatePaymentSessionIdDto
    */
-  async updatePaymentSessionId(updatePaymentSessionIdDto: any): Promise<any> {
+  async updatePaymentSessionId(updatePaymentSessionIdDto: UpdatePaymentSessionIdDto): Promise<any> {
     try {
+      const flagRTN = updatePaymentSessionIdDto.flagRTN == true
+      let dataToUpdate: Partial<OrderAttributes> = {
+        paymentSessionId: updatePaymentSessionIdDto.paymentSessionId, 
+      }
+
+      if(flagRTN) {
+        dataToUpdate.flagRTN = flagRTN
+        dataToUpdate.businessName = updatePaymentSessionIdDto.businessName
+        dataToUpdate.RTN = updatePaymentSessionIdDto.RTN
+      }
+
       return await this.orderModel.updateMany(
         { parentCode: updatePaymentSessionIdDto.parentCode },
-        { $set: { paymentSessionId: updatePaymentSessionIdDto.paymentSessionId } },
+        { $set: dataToUpdate },
       );
     } catch (err) {
       throw get(err, 'status')
@@ -469,7 +487,7 @@ export class OrderService {
     let orders: OrderAttributes[] = [];
     const prepareQueryOrders = buildQuery<OrderAttributes>(
       where('_id', Ops.in(...sendOrderToCourierDto.orderIds, Normalizers.ObjectId)),
-      select(['_id', 'code', 'status', 'user', 'userAddress', 'orderType', 'warehouse', 'orderDetails', 'courier']),
+      select(['_id', 'code', 'status', 'deliveryPrice', 'user', 'userAddress', 'orderType', 'businessPartner', 'warehouse', 'orderDetails', 'courier']),
     );
 
     orders = await this.findAll(prepareQueryOrders);
@@ -494,15 +512,37 @@ export class OrderService {
         throw {
           message: 'El pedido ya ha sido asignado a un courier',
         };
+      if (order.status == 7)
+        throw {
+          message: 'El pedido ya fue entregado',
+        };
     }
 
     const body = [];
     let orderPosition = 1;
     for (const order of orders) {
       if (order.orderType.code == OrderCodeTypeEnum.DELIVERY) {
-        const packaging: Packaging[] = [];
+        let orderDetails: any[] = [];
         for (const orderDetail of order.orderDetails) {
-          packaging.push(orderDetail.item.packaging);
+          let variantText = ""
+          if(orderDetail.variant && orderDetail.variant.atributes) {
+            const attributes: AttributeItemAttributes[] = orderDetail.variant.atributes
+
+            if(attributes.length > 0) 
+              for(const attribute of attributes) {
+                if(variantText != "")
+                  variantText = variantText + `, `
+                variantText = variantText + `${attribute.attribute.name}: ${attribute.value}`
+              }
+          }
+
+          orderDetails.push({
+            SKU: orderDetail.item.SKU,
+            name: orderDetail.item.name,
+            variant: variantText,
+            quantity: orderDetail.quantity,
+            packaging: orderDetail.item.packaging,
+          });
         }
 
         body.push({
@@ -517,6 +557,11 @@ export class OrderService {
             reference: order?.warehouse?.address?.reference,
             latitude: order?.warehouse?.address?.latitude,
             longitude: order?.warehouse?.address?.longitud,
+            business: {
+              email: order?.businessPartner?.emailOfficial,
+              name: order?.warehouse?.name,
+              phone: order?.warehouse?.phone,
+            },
           },
           destiny: {
             country: order?.userAddress?.country,
@@ -533,12 +578,12 @@ export class OrderService {
               phone: order?.user.userLogin.phoneNumber,
             },
           },
-          packaging: packaging,
           courier: {
             id: order?.courier.id,
             name: order?.courier.name,
             price: order?.deliveryPrice,
           },
+          detail: orderDetails,
         });
       }
       orderPosition++;
@@ -547,17 +592,15 @@ export class OrderService {
     if (body.length > 0) {
       const responseCourier = await sendOrdersToCourier(body);
       const dataToUpdate: OrderAttributes[] = [];
-      if (responseCourier.response == 'success') {
-        for (const guia of responseCourier.data.guias) {
-          const orderFound = orders.find((o) => o.code == guia.orden);
+      if (responseCourier && responseCourier.response != 'error') {
+        for (const orderCourier of responseCourier.data.filter(oc => oc.response == 'success')) {
+          const orderFound = orders.find((o) => o.code == orderCourier.orderCode);
 
           if (orderFound)
             dataToUpdate.push({
               ...orderFound,
-              courierData: JSON.stringify({
-                recolecta: responseCourier.data.recolecta,
-                ...guia,
-              }),
+              subStatus: 1, // Pendiente
+              courierData: orderCourier.data,
             });
         }
       } else {
@@ -566,7 +609,8 @@ export class OrderService {
         };
       }
 
-      if (dataToUpdate.length > 0) await this.updateStatusAndCourier(dataToUpdate);
+      if (dataToUpdate.length > 0) 
+        await this.updateStatusAndCourier(dataToUpdate);
     } else {
       throw {
         message: 'No hay pedidos para enviar al courier',
@@ -583,10 +627,65 @@ export class OrderService {
       action: updateBulkActions.arrayFilters,
       filters: { _id: order._id },
       fields: {
-        status: 6, // Enviado a courier
+        status: order.subStatus != 4 ? 6 : 7, // 6: en delivery, 7: pedido entregado
+        subStatus: order.subStatus,
         courierData: order.courierData,
       },
     }));
     return await this.orderModel.patchDocumentsBulk(createUpdateOrdersBulk);
+  }
+
+  /**
+   * Actuaiza el subStatus del pedido
+   * Este servicio lo consume el servidor de courier
+   * @param updateStatusCourierDto
+   */
+  async updateStatusCourier(updateStatusCourierDto: UpdateStatusCourierDto[]): Promise<OrderResponseToCourier[]> {
+    let orders: OrderAttributes[] = [];
+    const prepareQueryOrders = buildQuery<OrderAttributes>(
+      where('code', Ops.in(...updateStatusCourierDto.map(o => o.orderCode))),
+      select(['_id', 'code', 'status', 'courierData']),
+    );
+
+    orders = await this.findAll(prepareQueryOrders);
+    const dataToUpdate: OrderAttributes[] = [];
+    let response: OrderResponseToCourier[] = []
+
+    // Valida uno a uno que los pedidos existan
+    for (const courierData of updateStatusCourierDto) {
+      let orderResponse = {
+        orderCode: courierData.orderCode,
+        response: 'success',
+        errorMessage: '',
+      }
+
+      const orderFound = orders.find((o) => o.code == courierData.orderCode);
+
+      if (orderFound) {
+        dataToUpdate.push({
+          ...orderFound,
+          subStatus: courierData.status,
+        });
+      } else {
+        orderResponse.response = 'error'
+        orderResponse.errorMessage = OrderErrors.ORDER_NOT_FOUND
+      }
+      response.push(orderResponse)
+    }
+
+    if (dataToUpdate.length > 0)
+      try {
+        await this.updateStatusAndCourier(dataToUpdate);
+      } catch (error) {
+        response.forEach(r => {
+          const orderWithError = dataToUpdate.some(o => o.code == r.orderCode)
+          if(orderWithError) {
+            r.response = 'error'
+            r.errorMessage = 'No se actualizó el estado del pedido'
+          }
+        })
+      }
+      
+    return response
   }
 }
