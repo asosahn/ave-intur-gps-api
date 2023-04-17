@@ -200,9 +200,9 @@ export class OrderService {
       const results = [];
       const validateOrder: Array<Record<string, any>> | any = await this.validateOrder(createOrderDto, { user, token }, ValidationTypeEnum.CREATE);
       const findErrors = validateOrder.some((order) => order.error);
-      // if (findErrors) {
-      //   return validateOrder;
-      // }
+      if (findErrors) {
+        return validateOrder;
+      }
 
       let parentCode: string = null;
       const orderIds = [];
