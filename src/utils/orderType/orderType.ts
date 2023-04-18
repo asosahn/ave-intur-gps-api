@@ -48,7 +48,7 @@ class DeliveryClass implements CheckOrderInterface {
           address: this.order?.warehouse?.address?.address,
           reference: this.order?.warehouse?.address?.reference,
           latitude: this.order?.warehouse?.address?.latitude,
-          longitude: this.order?.warehouse?.address?.longitude,
+          longitude: this.order?.warehouse?.address?.longitud,
         },
         destiny: {
           country: this.order?.userAddress?.country,
@@ -58,7 +58,7 @@ class DeliveryClass implements CheckOrderInterface {
           address: this.order?.userAddress?.address,
           reference: this.order?.userAddress?.reference,
           latitude: this.order?.userAddress?.latitude,
-          longitude: this.order?.userAddress?.longitude,
+          longitude: this.order?.userAddress?.longitud,
         },
         couriers: this.order?.warehouse?.couriers ?? [],
       },
