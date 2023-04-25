@@ -1,1 +1,4 @@
-{}
+{
+  "MONGO_DATABASE": "mongodb+srv://gps_admin:y5hVo9fWJBKLkL5f@intur.h7l94.mongodb.net/gps?retryWrites=true&w=majority&maxPoolSize=20",
+  "RABBIT_MQ": "amqps://vfjvrgxh:BB4LSRQWfsgXrRy47DjHtZTKj9gw9MX5@albatross.rmq.cloudamqp.com/vfjvrgxh"
+}

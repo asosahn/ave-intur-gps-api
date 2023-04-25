@@ -1,13 +1,5 @@
 {
-  "MONGO_DATABASE": "mongodb+srv://ave-admin:kWRgfFPS44JaDQvG@develop-g.ot8c5lf.mongodb.net/gurus?retryWrites=true&w=majority&maxPoolSize=20",
-  "API_DELIVERY_SWAGGER": "http://localhost:3017",
-  "API_CLIENT_URL": "https://dgpapi.aveapplications.com/client/v1/api",
-  "API_LOCATION_URL": "https://dgpapi.aveapplications.com/location/v1/api",
-  "API_MASTER_URL": "https://dgpapi.aveapplications.com/master/v1/api",
-  "API_WAREHOUSE_URL": "https://dgpapi.aveapplications.com/warehouse/v1/api",
-  "API_ITEM_URL": "https://dgpapi.aveapplications.com/item/v1/api",
-  "API_BANK_URL": "https://dgpapi.aveapplications.com/BANK/v1/api",
-  "API_AUTH_URL": "https://dgpapi.aveapplications.com/auth/v1/api",
-  "DELIVERY_COURIERS_URL": "https://delivery.pla22agurus.com:2052/api/delivery/courier/get_list/origin",
-  "SEND_ORDERS_TO_COURIER_URL": "https://delivery.pla22agurus.com:2052/api/delivery/courier/send_courier"
+  "MONGO_DATABASE": "mongodb+srv://gps_admin:y5hVo9fWJBKLkL5f@intur.h7l94.mongodb.net/gps?retryWrites=true&w=majority&maxPoolSize=20",
+  "RABBIT_MQ": "amqps://fyfuyalw:4ALTvY-w8LvXcW3da-4QFFnLHI2Ic_26@albatross.rmq.cloudamqp.com/fyfuyalw",
+  "API_GPS_SWAGGER": "http://localhost:30117"
 }

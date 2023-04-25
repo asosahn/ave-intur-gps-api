@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PingModule } from './modules/ping/ping.module';
 import configuration from './config/configuration';
 import { MongooseModule } from '@nestjs/mongoose';
+import { SysGpsModule } from './modules/sys-gps/sys-gps.module';
 import { OrderLogModule } from './modules/order-log/order-log.module';
-import { OrderDetailTemporalModule } from './modules/order-detail-temporal/order-detail-temporal.module';
-import { OrderDetailModule } from './modules/order-detail/order-detail.module';
-import { OrderPayModule } from './modules/order-pay/order-pay.module';
-import { OrderModule } from './modules/order/order.module';
-
+import { StoreLogModule } from './modules/store-log/store-log.module';
+import { SysGpsMsModule } from './modules/sys-gps-ms/sys-gps-ms.module';
 
 @Module({
   imports: [
@@ -19,16 +17,17 @@ import { OrderModule } from './modules/order/order.module';
       isGlobal: true,
     }),
     MongooseModule.forRootAsync({
-      useFactory: () => ({
-        uri: process.env.MONGO_DATABASE,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_DATABASE'),
       }),
     }),
     PingModule,
+    SysGpsModule,
     OrderLogModule,
-    OrderDetailTemporalModule,
-    OrderDetailModule,
-    OrderPayModule,
-    OrderModule,
+    StoreLogModule,
+    SysGpsMsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

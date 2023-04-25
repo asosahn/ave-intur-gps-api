@@ -1,3 +1,3 @@
-import OrderLogAttributes from '@albatrosdeveloper/ave-models-npm/lib/schemas/orderLog/orderLog.entity';
+import { OrderLogAttributes } from '../../../database/models/orderLogs/orderLog.attributes';
 
 export class CreateOrderLogDto extends OrderLogAttributes {}
