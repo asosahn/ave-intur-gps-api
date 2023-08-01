@@ -58,7 +58,7 @@ export class SysGpsService {
           },
           {
             $sort: {
-              'location.timestamp': -1,
+              'location.timestampToDate': -1,
             },
           },
           {
